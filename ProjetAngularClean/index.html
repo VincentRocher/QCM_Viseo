@@ -20,23 +20,17 @@
     </div>
 
     <!-- Affichage des questions -->
-    <div ng-repeat="question in courant.qcm_Courant.questions" ng-if="question == courant.question_Courante ">
+    <div ng-repeat="question in courant.qcm_Courant.questions" ng-if="question.Titre == courant.question_Courante.Titre ">
         <p>Question: {{question.Titre}}
         <!-- Affichage des reponses. Affichage different si le QCM a été fait ou pas. -->
+            {{courant.qcm[courant.qcm_Courant.id]}}
+            <li ng-repeat="reponse in courant.question_Courante.reponses" ng-if="!courant.qcm[courant.qcm_Courant.id]">
 
-            <li ng-repeat="reponse in question.reponses" ng-if="!courant.qcm[courant.qcm_Courant.id]">
                  <input type="radio"
-                        ng-value="true"
-                        ng-if="reponse.isTrue"
+                        ng-value="courant.qcm_Courant.id"
                        ng-click="courant.nextQ(reponse.id, courant.qcm[courant.qcm_Courant.id])"
                        name="{{'Normal'+'qcm'+courant.qcm_Courant.id+'ques'+courant.question_Courante.id}}"
                        />
-        <input type="radio"
-               ng-value="false"
-               ng-if="!reponse.isTrue"
-               ng-click="courant.nextQ(reponse.id, courant.qcm[courant.qcm_Courant.id])"
-               name="{{'Normal'+'qcm'+courant.qcm_Courant.id+'ques'+courant.question_Courante.id}}"
-                />
                 <span>{{reponse.Titre}}</span>
             </li>
             <li ng-repeat="reponse in question.reponses" ng-if="courant.qcm[courant.qcm_Courant.id]" ng-click="courant.nextQ(reponse.id, true)">
@@ -47,11 +41,11 @@
                        name="{{'Normal'+'qcm'+courant.qcm_Courant.id+'ques'+courant.question_Courante}}"
                        ng-if="reponse.isTrue"
                         />
-            <input type="radio"
-                   ng-value="false"
-                   ng-if="!reponse.isTrue"
-                   name="{{'Normal'+'qcm'+courant.qcm_Courant.id+'ques'+courant.question_Courante}}"
-                   />
+                <input type="radio"
+                       ng-value="false"
+                       ng-if="!reponse.isTrue"
+                       name="{{'Normal'+'qcm'+courant.qcm_Courant.id+'ques'+courant.question_Courante}}"
+                       />
                 <span ng-class="courant.qcm.styleReponse[courant.question_Courante.id].reponses[reponse.id]">
                     <span ng-class="qcm_Table[courant.qcm_Courant.id].questions[courant.question_Courante.id].reponses[reponse.id]">{{reponse.Titre}}</span>
                 </span>
