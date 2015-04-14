@@ -1,0 +1,35 @@
+.cleared
+{
+    color:deepskyblue;
+}
+
+.isTrue
+{
+    color:limegreen !important;
+}
+.selected
+{
+    color:red ;
+}
+.globalForm
+{
+    width:200px;
+    height:200px;
+    padding:5px;
+    background-color:lightgrey;
+    border:2px solid grey;
+    position:fixed;
+    top:0px;
+    left:200px;
+
+}
+.create{
+    background-color:forestgreen;
+
+}
+.delete{
+    background-color:red;
+}
+.edit{
+    background-color:yellow;
+}

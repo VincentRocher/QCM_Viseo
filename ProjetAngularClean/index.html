@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8">
+</head>
+<html ng-app="QCM">
+<body ng-controller="QCM_courant as courant">
+<script src="./js/angular.js" ></script>
+<script src="./js/angular-resource.js" ></script>
+<script src="./js/angular-route.js" ></script>
+<script type="text/javascript" src="./js/qcm.js"></script>
+<link rel="stylesheet" href="./css/style.css" />
+
+<button ng-click="courant.switchEdition()" ng-disabled="courant.globalInputText" ng-hide="courant.modeEdition" class="edit">Mode Edition</button><button ng-disabled="courant.globalInputText"  ng-click="courant.switchEdition()"ng-show="courant.modeEdition">Mode Normal</button>
+
+<!-- Module normal -->
+
+<div ng-show="!courant.modeEdition">
+    <div ng-repeat="qcm in qcm_Table" ng-class="courant.qcm[qcm.id]">
+        <span ng-click="courant.setCourant(qcm)">{{qcm.Titre}}</span>
+    </div>
+
+    <!-- Affichage des questions -->
+    <div ng-repeat="question in courant.qcm_Courant.questions" ng-if="question == courant.question_Courante ">
+        <p>Question: {{question.Titre}}
+        <!-- Affichage des reponses. Affichage different si le QCM a été fait ou pas. -->
+
+            <li ng-repeat="reponse in question.reponses" ng-if="!courant.qcm[courant.qcm_Courant.id]">
+                 <input type="radio"
+                        ng-value="true"
+                        ng-if="reponse.isTrue"
+                       ng-click="courant.nextQ(reponse.id, courant.qcm[courant.qcm_Courant.id])"
+                       name="{{'Normal'+'qcm'+courant.qcm_Courant.id+'ques'+courant.question_Courante.id}}"
+                       />
+        <input type="radio"
+               ng-value="false"
+               ng-if="!reponse.isTrue"
+               ng-click="courant.nextQ(reponse.id, courant.qcm[courant.qcm_Courant.id])"
+               name="{{'Normal'+'qcm'+courant.qcm_Courant.id+'ques'+courant.question_Courante.id}}"
+                />
+                <span>{{reponse.Titre}}</span>
+            </li>
+            <li ng-repeat="reponse in question.reponses" ng-if="courant.qcm[courant.qcm_Courant.id]" ng-click="courant.nextQ(reponse.id, true)">
+
+                <input type="radio"
+                       ng-value="true"
+
+                       name="{{'Normal'+'qcm'+courant.qcm_Courant.id+'ques'+courant.question_Courante}}"
+                       ng-if="reponse.isTrue"
+                        />
+            <input type="radio"
+                   ng-value="false"
+                   ng-if="!reponse.isTrue"
+                   name="{{'Normal'+'qcm'+courant.qcm_Courant.id+'ques'+courant.question_Courante}}"
+                   />
+                <span ng-class="courant.qcm.styleReponse[courant.question_Courante.id].reponses[reponse.id]">
+                    <span ng-class="qcm_Table[courant.qcm_Courant.id].questions[courant.question_Courante.id].reponses[reponse.id]">{{reponse.Titre}}</span>
+                </span>
+            </li>
+
+        </p>
+
+        <button ng-click="courant.moveQ(-1)" ng-hide="question.id==0">last</button>
+        <button ng-click="courant.moveQ(1)" ng-hide="question.id==courant.qcm_Courant.questions.length-1">next</button>
+
+    </div>
+    <span ng-show="courant.affScore">Votre score:{{courant.score}}</span>
+    <!-- Formulaire d'inscription -->
+    <div ng-show="courant.formulaireInscription" class="globalForm" >
+        <form ng-submit="courant.inscription()" name="Inscription">
+            <span >nom :</span><input type="text" name="Nom"/><br>
+            <span >prenom :</span><input type="text" name="Prenom"/><br>
+            <span >Date de naissance :</span><input type="Date" name="DDN"/><br>
+            <span >Genre :</span><input type="text" name="Genre"/><br>
+            <span > Code Postal :</span><input type="text" name="CodePostal"/><br>
+            <span >Ville :</span><input type="text" name="Ville"/><br>
+            <span >Nationalite :</span><select ng-model="Nat" ><option value="Nat1">Nat1</option><option value="Nat2">Nat2</option><option value="Nat3">Nat3</option></select><br>
+            <input type="submit" value="Valider"/>
+        </form>
+        <button ng-click="courant.cancel('inscription')">Annuler</button>
+
+    </div>
+</div>
+
+
+
+
+<!-- Login de securite pour l'édition-->
+<div class="globalForm" ng-show="courant.modeEditionSecurite">
+    <form ng-submit="courant.securiteEdition()" name="securiteEdition">
+        <input type="text" name="loginSecu" ng-model="courant.user.login" ng-minlength="2" ng-maxlength="10" required/>
+        <br/>
+        <span ng-show="securiteEdition.loginSecu.$error.minlength"> more than 2 char</span>
+        <span ng-show="securiteEdition.loginSecu.$error.maxlength"> less than 10 char</span>
+        <span ng-show="securiteEdition.loginSecu.$error.required"> required</span>
+        <input type="password" name="PwdSecu" ng-model="courant.user.pwd" required/>
+        <br/>
+        <span ng-show="securiteEdition.PwdSecu.$error.required"> required</span>
+        <input type="submit" value="confirmer">
+    </form>
+    <button ng-submit="courant.cancel('securite')">Annuler</button>
+</div>
+
+
+
+
+<!-- Module d'édition -->
+<div ng-show="courant.modeEdition">
+    <div ng-repeat="qcm in qcm_Table">
+        <input type="text"  name ="{{'qcm'+courant.qcm_Courant.id}}" placeholder="{{qcm.Titre}}" ng-click="courant.select(qcm)" ng-model="courant.qcm_Edit[qcm.id].Titre"   value ="{{qcm.Titre}}"/>
+        <button ng-disabled="courant.type_Edit != 'qcm' || courant.qcm_Courant.id != qcm.id" ng-click="courant.save(qcm.id,'qcm')" class="edit">Sauvegarder</button>
+        <button ng-disabled="courant.type_Edit != 'qcm' || courant.qcm_Courant.id != qcm.id" ng-click="courant.cancel('Edit_QCM')" class="edit">Annuler</button>
+        <button ng-disabled="courant.type_Edit != 'qcm' || courant.qcm_Courant.id != qcm.id || courant.qcm_Edit[qcm.id].Titre.length >0" ng-click="courant.InternalEdit('qcm')" class="edit">Editer QCM</button>
+        <button ng-disabled="courant.type_Edit != 'qcm' || courant.qcm_Courant.id != qcm.id || courant.qcm_Edit[qcm.id].Titre.length >0" ng-click="courant.supprimer(qcm.id,'qcm')" class="delete">Supprimer QCM</button>
+    </div>
+    <input ng-click="courant.selectN()" type="text" ng-model="courant.create_Qcm_Input" name="create_Qcm_Input"value="Creer QCM"/><button ng-disabled="courant.qcm_Input" ng-click="courant.nouveau('qcm')" class="create">Creer QCM</button>
+
+    <!-- edition de Questions -->
+    <br>
+    <br>
+    <span ng-show="courant.qcm_Courant" >QCM actif:{{courant.qcm_Courant.Titre}}</span>
+    <br>
+    <br>
+    <div ng-repeat="question in courant.qcm_Courant.questions" ng-hide="!courant.qcm_Internal_Input ">
+
+        <input type="text" name ="{{'ques'+courant.question_Courante.id}}" ng-model="courant.ques_Edit[question.id].Titre"  ng-click="courant.selectQ(question)" value="{{question.Titre}}" placeholder="{{question.Titre}}"/>
+        <button ng-disabled="courant.type_Edit != 'question' || courant.question_Courante.id != question.id" ng-click="courant.save(question.id,'question')" class="edit">Sauvegarder</button>
+        <button ng-disabled="courant.type_Edit != 'question' || courant.question_Courante.id != question.id" ng-click="courant.cancel('Edit_Ques')" class="edit">Annuler</button>
+        <button ng-disabled="courant.type_Edit != 'question' || courant.question_Courante.id != question.id || courant.ques_Edit[question.id].Titre.length >0" ng-click="courant.InternalEdit('question')" class="edit">editer</button>
+        <button ng-disabled="courant.type_Edit != 'question' || courant.question_Courante.id != question.id || courant.ques_Edit[question.id].Titre.length >0" ng-click="courant.supprimer(question.id, 'question')" class="delete">supprimer</button>
+    </div>
+    <input ng-click="courant.selectN()" ng-hide="!courant.qcm_Internal_Input " type="text" ng-model="courant.create_Question_Input" name="create_Question_Input"value="Creer question"/>
+    <button ng-disabled="courant.ques_Input" ng-show="courant.qcm_Courant && courant.qcm_Internal_Input" ng-click="courant.nouveau('question')" class="create">Creer Question</button>
+
+    <!-- edition de Reponses -->
+    <br>
+    <br>
+    <span ng-show="courant.question_Courante" >Question active:{{courant.question_Courante.Titre}}</span>
+    <br>
+    <br>
+    <div ng-repeat="reponse in courant.question_Courante.reponses" ng-hide="!courant.ques_Internal_Input">
+        <input type="text" name ="{{'rep'+courant.reponse_Courante.id}}" ng-model="courant.rep_Edit[reponse.id].Titre" value="{{reponse.Titre}}" placeholder="{{reponse.Titre}}" ng-click="courant.selectR(reponse)"/>
+        <input type="radio"
+               ng-disabled="courant.globalInputText"
+               ng-checked="reponse.isTrue"
+               ng-change="courant.uncheckOther(reponse)"
+               ng-model="reponse.isTrue"
+               name="{{'qcm'+courant.qcm_Courant.id+'ques'+courant.question_Courante.id}}"
+               value="true"
+               />
+        <button ng-disabled="courant.type_Edit != 'reponse' ||courant.reponse_Courante.id != reponse.id" ng-click="courant.save(reponse.id,'reponse')" class="edit">Sauvegarder</button>
+        <button ng-disabled="courant.type_Edit != 'reponse' ||courant.reponse_Courante.id != reponse.id" ng-click="courant.cancel('Edit_Rep')" class="edit">Annuler</button>
+        <button ng-disabled="courant.type_Edit != 'reponse' ||courant.reponse_Courante.id != reponse.id || courant.rep_Edit[reponse.id].Titre.length >0" ng-click="courant.supprimer(reponse.id, 'reponse')"class="delete">supprimer</button>
+    </div>
+    <input ng-click="courant.selectN()" ng-hide="!courant.ques_Internal_Input" type="text" ng-model="courant.create_Reponse_Input" name="create_Reponse_Input"value="Creer reponse"/><button ng-disabled="courant.rep_Input" ng-show="courant.question_Courante && courant.ques_Internal_Input" ng-click="courant.nouveau('reponse')" class="create">Creer Reponse</button>
+
+
+    <!-- input d'édition -->
+
+    <div class="globalForm" ng-show="courant.globalInputText">
+        <form ng-submit = "courant.inputDone()" name="globalInput">
+            <input type="text" name="inputGlobal" ng-model="courant.inputGlobal" />
+            <input type="submit" value="Confirmer"/>
+        </form>
+        <button ng-click="courant.cancel('globalInput')">Annuler</button>
+    </div>
+</div>
+
+
+
+
+</body>
+</html>
