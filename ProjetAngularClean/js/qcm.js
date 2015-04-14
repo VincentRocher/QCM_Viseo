@@ -9,226 +9,20 @@ angular.module('QCM',['ngResource','ngRoute'])
         self.ques_Internal_Input=false;
         self.type_Edit="";
         self.qcm="";
-
-
-
-        $scope.qcm_Table= [
-            {   id:0,
-                Titre: "javascript",
-                questions:
-                    [
-                        {
-                            id:0,
-                            Titre:"Comment selectionner une div en javascript?",
-                            reponses:
-                                [
-                                    {
-                                        id:0,
-                                        Titre:"GetElementById(#id);",
-                                        isTrue:true
-                                    },
-                                    {
-                                        id:1,
-                                        Titre:"</br>",
-                                        isTrue:false
-                                    },
-                                    {
-                                        id:2,
-                                        Titre:"$(#id)",
-                                        isTrue:false
-                                    }
-
-                                ]
-
-
-                        },
-                        {
-                            id: 1,
-                            Titre: "Comment faire apparaitre un message d'alerte?",
-
-                            reponses:
-                                [
-                                    {
-                                        id:0,
-                                        Titre: "OnStart()",
-                                        isTrue:false
-                                    },
-                                    {
-                                        id:1,
-                                        Titre: "messageAlerte()",
-                                        isTrue:false
-                                    },
-                                    {
-                                        id:2,
-                                        Titre: "alert()",
-                                        isTrue:true
-                                    }
-
-                                ]
-
-
-                        },
-                        {
-                            id: 2,
-                            Titre: "3?",
-
-                            reponses:
-                                [
-                                    {
-                                        id:0,
-                                        Titre: "OnStart()",
-                                        isTrue:false
-                                    },
-                                    {
-                                        id:1,
-                                        Titre: "messageAlerte()",
-                                        isTrue:false
-                                    },
-                                    {
-                                        id:2,
-                                        Titre: "alert()",
-                                        isTrue:true
-                                    }
-
-                                ]
-
-
-                        }
-
-
-                    ]
-
+        $http.get("./rest/QCMTable").then(
+            function(response){
+                $scope.qcm_Table= response.data;
             },
-            {   id:1,
-                Titre: "HTML5",
-
-                questions:
-                    [
-                        {
-                            id:0,
-                            Titre:"quelle balise pour faire un header?",
-                            Repondu:false,
-                            reponses:
-                                [
-                                    {
-                                        id:0,
-                                        Titre:"<header/>",
-                                        isTrue:false
-                                    },
-                                    {
-                                        id:1,
-                                        Titre:"<header></header>",
-                                        isTrue:true
-                                    },
-                                    {
-                                        id:2,
-                                        Titre:"::header::",
-                                        isTrue:false
-                                    }
-
-                                ]
-
-
-                        },
-                        {
-                            id: 1,
-                            Titre: "comment aller a la ligne?",
-                            reponses:
-                                [
-                                    {
-                                        id:0,
-                                        Titre: "<br/>",
-                                        isTrue:true
-                                    },
-                                    {
-                                        id:1,
-                                        Titre: "/n",
-                                        isTrue:false
-                                    },
-                                    {
-                                        id:2,
-                                        Titre: "entrée",
-                                        isTrue:false
-                                    }
-
-                                ]
-
-
-                        }
-
-
-                    ]
-
-            },
-            {   id:2,
-                Titre: "Angular",
-
-                questions:
-                    [
-                        {
-                            id:0,
-                            Titre:"Comment cacher un element?",
-                            Repondu:false,
-                            reponses:
-                                [
-                                    {
-                                        id:0,
-                                        Titre:"ng-hide:true",
-                                        isTrue:true
-                                    },
-                                    {
-                                        id:1,
-                                        Titre:"ng-show:true",
-                                        isTrue:false
-                                    },
-                                    {
-                                        id:2,
-                                        Titre:"ng-cacher:oui",
-                                        isTrue:false
-                                    }
-
-                                ]
-
-
-                        },
-                        {
-                            id: 1,
-                            Titre: "qu'utiliser pour faire des ng-model dynamiques?",
-                            Repondu:false,
-                            reponses:
-                                [
-                                    {
-                                        id:0,
-                                        Titre: "$scoop",
-                                        isTrue:false
-                                    },
-                                    {
-                                        id:1,
-                                        Titre: "360 noscope",
-                                        isTrue:false
-                                    },
-                                    {
-                                        id:2,
-                                        Titre: "$scope",
-                                        isTrue:true
-                                    }
-
-                                ]
-
-
-                        },
-
-
-                    ]
-
-            },
+            function(errResponse)
             {
-                id: 3,
-                Titre: "Autre",
-                questions: []
+                console.log(errResponse.data);
+                console.error("error while fetching notes");
             }
+        );
 
-        ];
+
+
+
         self.selection = [
             {
                 questions :
@@ -257,22 +51,35 @@ angular.module('QCM',['ngResource','ngRoute'])
         }
         self.inscription = function()
         {
-            self.qcm_Courant = self.qcmTemp;
-            self.QIndex=0;
-            self.score=0;
-            self.affScore=false;
-            self.question_Courante=$scope.qcm_Table[self.qcm_Courant.id].questions[0];
-            if(self.qcm[self.qcm_Courant.id]) {
-                self.qcm.styleReponse = self.selection[self.qcm_Courant.id].questions;
+            $http.get("./rest/QCMList/"+self.qcmTemp.id).then(
+                function(response){
+                    alert(response.data.questions);
+
+                    self.qcm_Courant= response.data;
+                    self.QIndex=0;
+                    self.score=0;
+                    self.affScore=false;
+                    self.question_Courante=self.qcm_Courant.questions[0];
+                    if(self.qcm[self.qcm_Courant.id]) {
+                        self.qcm.styleReponse = self.selection[self.qcm_Courant.id].questions;
 
 
 
 
-            }
+                    }
 
-            //alert("Select"+JSON.stringify(self.selection[self.qcm_Courant.id].questions));
-            //alert("Select"+JSON.stringify(self.question_Courante.styleReponse));
-            self.formulaireInscription=false;
+                    //alert("Select"+JSON.stringify(self.selection[self.qcm_Courant.id].questions));
+                    //alert("Select"+JSON.stringify(self.question_Courante.styleReponse));
+                    self.formulaireInscription=false;
+                },
+                function(errResponse)
+                {
+                    console.log(errResponse.data);
+                    console.error("error while fetching notes");
+                }
+            );
+
+
 
         }
         self.select = function(qcm)
