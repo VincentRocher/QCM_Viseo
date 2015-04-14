@@ -9,7 +9,7 @@ angular.module('QCM',['ngResource','ngRoute'])
         self.ques_Internal_Input=false;
         self.type_Edit="";
         self.qcm="";
-        $http.get("./rest/QCMTable").then(
+        $http.get("./rest/QCMList").then(
             function(response){
                 $scope.qcm_Table= response.data;
             },
@@ -54,12 +54,11 @@ angular.module('QCM',['ngResource','ngRoute'])
             $http.get("./rest/QCMList/"+self.qcmTemp.id).then(
                 function(response){
                     alert(response.data.questions);
-
-                    self.qcm_Courant= response.data;
+                    self.qcm_Courant= response.data;  // QCM_ID/QCM_TITRE/QUESTIONS sans REPONSE
                     self.QIndex=0;
                     self.score=0;
                     self.affScore=false;
-                    self.question_Courante=self.qcm_Courant.questions[0];
+                    self.question_Courante=self.qcm_Courant.questions[0]; // QUES_ID/QUES_TITRE/REPONSES sans ISTRUE
                     if(self.qcm[self.qcm_Courant.id]) {
                         self.qcm.styleReponse = self.selection[self.qcm_Courant.id].questions;
 

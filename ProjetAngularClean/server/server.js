@@ -252,11 +252,38 @@ app.get('/rest/QCMList', function(req,res){
 
 
 });
-app.get('/rest/QCMList/:id', function(req,res){
-    var Titres={id:req.params.id,Titre:qcm_Table[req.params.id].Titre, questions:qcm_Table[req.params.id].questions};
+app.get('/rest/QCMList/:QcmId', function(req,res){
+    var Titres=
+    {
+        id:req.params.QcmId,
+        Titre:qcm_Table[req.params.QcmId].Titre,
+        questions:qcm_Table[req.params.QcmId].questions
+    };
+    for(var i =0;i<qcm_Table[req.params.id].questions.length;i++)
+    {
+        delete(Titres.questions[i].reponses);
+
+    }
     res.json(Titres);
 
 });
+app.get('/rest/QCMList/:QcmId/QuesList/:quesId', function(req,res)
+{
+    var Question=
+    {
+        id:req.params.quesId,
+        Titre:qcm_Table[req.params.QcmId].questions[req.params.quesId].Titre,
+        reponses:qcm_Table[req.params.QcmId].questions[req.params.quesId].reponses
+    };
+    for(var i =0;i<qcm_Table[req.params.QcmId].questions[req.params.quesId].reponses.length;i++)
+    {
+        delete(Question.reponses[i].isTrue);
+
+    }
+    console.log(Question);
+    res.json(Question);
+
+})
 app.post('/rest/answer', function(req, res){
 	res.json({
 		successes:1,
