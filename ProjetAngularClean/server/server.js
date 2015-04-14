@@ -2,7 +2,19 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var _ = require('lodash');
+var app = express();
 
+
+app.use('/', express.static(__dirname+'../..'));
+app.use('/rest', bodyParser.json());
+app.use('/rest',bodyParser.urlencoded({     // to support URL-encoded bodies
+    extended: true
+}));
+app.listen(9000);
+console.log("Server Lancé sur localhost:9000/");
+
+
+var userTable = [] ;
 var qcm_Table =
     [
         {   id:0,
@@ -222,13 +234,17 @@ var qcm_Table =
 
     ];
 
-var app = express();
+function Utilisateur(name, surname, birth, gender, postal, town, nat, token){
+    this.name=name;
+    this.surname=surname;
+    this.birth=birth;
+    this.gender=gender;
+    this.postal=postal;
+    this.town=town;
+    this.nationality=nat;
+    this.token=token;
+}
 
-console.log("Server Lancé sur localhost:9000/");
-
-app.use('/', express.static(__dirname+'../..'));
-app.use('/rest', bodyParser.json());
-app.listen(9000);
 
 app.get('/rest/myResource/:resourceId', function(req,res){
 	res.json({
@@ -252,6 +268,45 @@ app.get('/rest/QCMList', function(req,res){
 
 
 });
+app.post('/rest/User', function(req,res)
+{
+
+    var Now =  Date.now();
+    var token=
+    {
+        value:Math.floor(Math.random()*9999999+1),
+        created: Now,
+        disqualified:false
+    };
+    var util = new Utilisateur(req.body.Name, req.body.Surname, req.body.Birth, req.body.Gender, req.body.Postal, req.body.Town, req.body.Nat, token);
+    userTable[userTable.length]=util;
+    console.log(JSON.stringify(userTable));
+    var returnValue = userTable.length-1
+    res.end(returnValue.toString());
+}
+)
+function checkToken(id)
+{
+    var now = Date.now();
+    var tokenValid= now-userTable[id].token.created;
+    if(tokenValid<(30*60*1000) && !userTable[id].token.disqualified)
+    {
+        tokenValid=(tokenValid-tokenValid%1000)/1000
+        var minutes=(tokenValid-tokenValid%60)/60;
+        var secondes=tokenValid-minutes*60;
+
+
+        //return("Token Encore Valide, temps restant:"+(29-minutes)+" minutes et "+(60-secondes)+" secondes");
+        return true;
+
+    }
+    else
+    {
+        return false;
+    }
+
+
+}
 app.get('/rest/QCMList/:QcmId', function(req,res){
     var QCM=
     {
@@ -264,6 +319,55 @@ app.get('/rest/QCMList/:QcmId', function(req,res){
         delete QCM.questions[i].reponses;
     }
     res.json(QCM);
+
+});
+app.get('/rest/QCMList/:id_QCM/UserId/:userId/ScoreQCM/:rep', function (req, res) {
+    var id_Us = req.params.userId;
+    console.log(id_Us);
+    console.log(userTable[id_Us]);
+    if(userTable[id_Us] != undefined)
+    {
+        console.log("1");
+        console.log(checkToken(id_Us));
+        if(checkToken(id_Us))
+        {
+            console.log("2");
+            var reponseSheet=req.params.rep.split('x');
+            var tab= reponseSheet.splice(reponseSheet.length-1,1);
+            var id_qcm= req.params.id_QCM;
+            // console.log(id_req);
+
+            //reponseSheet.pop();
+
+            var resultatFinal=0;
+
+
+            for(var j=0; j<qcm_Table[id_qcm].questions.length; j++)
+            {
+
+                // console.log(req.body.questions[j].reponses);
+                // console.log(mylist[i].questions[j].reponses[k].resp);
+                //delete mylist[i].questions[j].reponses[k].vrais;
+
+
+                if((qcm_Table[id_qcm].questions[j].reponses[reponseSheet[j]].isTrue))
+                {
+                    resultatFinal++;
+                }
+
+
+            }
+
+            console.log(resultatFinal);
+            userTable[id_Us].token.disqualified=true;
+            res.json({resultat: resultatFinal});
+
+        }
+        else
+        {
+            res.json({resultat:-1})
+        }
+    }
 
 });
 app.get('/rest/QCMList/:QcmId/QuesList/:quesId', function(req,res)
@@ -282,6 +386,8 @@ app.get('/rest/QCMList/:QcmId/QuesList/:quesId', function(req,res)
     res.json(Question);
 
 })
+
+
 app.post('/rest/answer', function(req, res){
 	res.json({
 		successes:1,
