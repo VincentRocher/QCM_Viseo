@@ -9,8 +9,13 @@ angular.module('QCM',['ngResource','ngRoute'])
         self.ques_Internal_Input=false;
         self.type_Edit="";
         self.qcm="";
-        $http.get("./rest/QCMList").then(
-            function(response){
+        self.connectedUserId="";
+        self.RepQuest = [
+                   ];
+        $http.get("./rest/QCMList").then
+        (
+            function(response)
+            {
                 $scope.qcm_Table= response.data;
             },
             function(errResponse)
@@ -51,45 +56,57 @@ angular.module('QCM',['ngResource','ngRoute'])
         }
         self.inscription = function()
         {
-            $http.get("./rest/QCMList/"+self.qcmTemp.id).then(
-                function(response){
+            $http.post("./rest/User", self.utilisateurIns).then(
+                function(responseIns)
+                {
+                    self.connectedUserId=responseIns.data;
+                $http.get("./rest/QCMList/"+self.qcmTemp.id).then(
+                    function(responseQCM){
 
-                    self.qcm_Courant= response.data;  // QCM_ID/QCM_TITRE/QUESTIONS sans REPONSE
+                        self.qcm_Courant= responseQCM.data;  // QCM_ID/QCM_TITRE/QUESTIONS sans REPONSE
 
-                    self.QIndex=0;
-                    self.score=0;
-                    self.affScore=false;
-                    $http.get("./rest/QCMList/"+self.qcmTemp.id+"/QuesList/0").then(
-                        function(response){
+                        self.QIndex=0;
+                        self.score=0;
+                        self.affScore=false;
+                        $http.get("./rest/QCMList/"+self.qcmTemp.id+"/QuesList/"+self.QIndex).then(
+                            function(responseQues){
 
-                            self.question_Courante=response.data; // QUES_ID/QUES_TITRE/REPONSES sans ISTRUE
+                                self.question_Courante=responseQues.data; // QUES_ID/QUES_TITRE/REPONSES sans ISTRUE
 
-                            alert(JSON.stringify(self.question_Courante));
-                            if(self.qcm[self.qcm_Courant.id]) {
-                                self.qcm.styleReponse = self.selection[self.qcm_Courant.id].questions;
+                                //  alert(JSON.stringify(self.question_Courante));
+                                if(self.qcm[self.qcm_Courant.id]) {
+                                    self.qcm.styleReponse = self.selection[self.qcm_Courant.id].questions;
+                                }
+
+                            },
+                            function(errResponseQues)
+                            {
+                                //alert("PAS COOL");
+                                console.log(errResponse.data);
+                                console.error("error while fetching notes");
                             }
 
-                        },
-                        function(errResponse)
-                        {
-                            alert("PAS COOL");
-                            console.log(errResponse.data);
-                            console.error("error while fetching notes");
-                        }
-
-                    );
+                        );
 
 
-                    //alert("Select"+JSON.stringify(self.selection[self.qcm_Courant.id].questions));
-                    //alert("Select"+JSON.stringify(self.question_Courante.styleReponse));
-                    self.formulaireInscription=false;
-                },
-                function(errResponse)
-                {
-                    console.log(errResponse.data);
-                    console.error("error while fetching notes");
-                }
+                        //alert("Select"+JSON.stringify(self.selection[self.qcm_Courant.id].questions));
+                        //alert("Select"+JSON.stringify(self.question_Courante.styleReponse));
+                        self.formulaireInscription=false;
+                    },
+                    function(errResponseQCM)
+                    {
+                        console.log(errResponse.data);
+                        console.error("error while fetching notes");
+                    }
+                );
+
+            },
+                function(errResponseIns)
+                {}
+
+
             );
+
 
 
 
@@ -116,6 +133,7 @@ angular.module('QCM',['ngResource','ngRoute'])
         self.selectR= function(reponse)
         {
             self.reponse_Courante=reponse;
+            //alert(self.reponse_Courante);
             self.type_Edit="reponse";
             self.rep_Input = true;
 
@@ -127,14 +145,14 @@ angular.module('QCM',['ngResource','ngRoute'])
         self.nextQ = function(id_Rep, isReplay)
         {
 
-
-
             if(!isReplay) {
-                if(!self.question_Courante.Repondu) {
-                    if ($scope.qcm_Table[self.qcm_Courant.id].questions[self.question_Courante.id].reponses[id_Rep].isTrue) {
-                        self.score++;
-                        //serveur ^
 
+
+                if(!self.question_Courante.Repondu) {
+                    //alert(self.question_Courante.reponses)
+
+                    if (self.question_Courante.reponses[id_Rep]) {
+                        self.RepQuest[self.question_Courante.id]=id_Rep;
                     }
 
                     if(self.selection[self.qcm_Courant.id] == undefined)
@@ -163,7 +181,7 @@ angular.module('QCM',['ngResource','ngRoute'])
 
                     }
                     //alert("AVANT:"+JSON.stringify(self.selection[self.qcm_Courant.id]));
-                    for(var i = 0;i<$scope.qcm_Table[self.qcm_Courant.id].questions[self.question_Courante.id].reponses.length;i++)
+                    for(var i = 0;i<self.question_Courante.reponses.length;i++)
                     {
                         //alert(i);
 
@@ -191,18 +209,61 @@ angular.module('QCM',['ngResource','ngRoute'])
 
                 }
             }
-
-
             self.QIndex++;
-            self.question_Courante = $scope.qcm_Table[self.qcm_Courant.id].questions[self.QIndex];
 
 
-            if(self.QIndex==$scope.qcm_Table[self.qcm_Courant.id].questions.length)
+
+
+            if(self.QIndex==self.qcm_Courant.questions.length)
             {
+                self.re_get='';
+                //alert(JSON.stringify(self.RepQuest));
+                for(var l=0;l<self.RepQuest.length;l++)
+                {
+                    //alert(JSON.stringify(self.re_get));
+                    self.re_get+=''+self.RepQuest[l]+'x';
+
+                }
+                alert(self.connectedUserId);
+                alert("./rest/QCMList/"+self.qcm_Courant.id+"/UserId/"+self.connectedUserId+"/ScoreQCM/"+self.re_get);
+                $http.get("./rest/QCMList/"+self.qcm_Courant.id+"/UserId/"+self.connectedUserId+"/ScoreQCM/"+self.re_get).then(
+                    function(response){
+                        alert(JSON.stringify(response));
+                        self.score=response.data;
+                    },
+                    function(errResponse)
+                    {
+                        //alert("self.score: "+JSON.stringify(self.score));
+
+                        //alert("PAS COOL imen");
+                        console.log(errResponse.data);
+                        console.error("error while fetching score");
+                    })
                 self.qcm[self.qcm_Courant.id]={cleared:true};
                 delete(self.QIndex);
                 delete(self.question_Courante);
                 self.affScore=true;
+            }
+            else{
+                $http.get("./rest/QCMList/"+self.qcm_Courant.id+"/QuesList/"+self.QIndex).then(
+                    function(response){
+
+                        self.question_Courante=response.data; // QUES_ID/QUES_TITRE/REPONSES sans ISTRUE
+
+                        //alert(JSON.stringify(self.question_Courante));
+                        //if(self.qcm[self.qcm_Courant.id]) {
+                        //self.qcm.styleReponse = self.selection[self.qcm_Courant.id].questions;
+                        // }
+
+                    },
+                    function(errResponse)
+                    {
+                        //alert("question_Courante: "+JSON.stringify(self.question_Courante));
+
+                        //alert("PAS COOL imen");
+                        console.log(errResponse.data);
+                        console.error("error while fetching notes");
+                    })
             }
         }
         self.moveQ = function(direction)
