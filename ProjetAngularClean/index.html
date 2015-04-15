@@ -21,13 +21,13 @@
 
     <!-- Affichage des questions -->
     <div ng-repeat="question in courant.qcm_Courant.questions" ng-if="question.Titre == courant.question_Courante.Titre ">
-        <p>Question: {{question.Titre}}
+        <p>Question : {{question.Titre}}
         <!-- Affichage des reponses. Affichage different si le QCM a été fait ou pas. -->
-            {{courant.qcm[courant.qcm_Courant.id]}}
+            {{courant.radio[courant.qcm_Courant.id]}}
             <li ng-repeat="reponse in courant.question_Courante.reponses" ng-if="!courant.qcm[courant.qcm_Courant.id]">
-
                  <input type="radio"
-                        ng-value="courant.qcm_Courant.id"
+                        ng-model="courant.radio[reponse.id]"
+                        ng-value="true"
                        ng-click="courant.nextQ(reponse.id, courant.qcm[courant.qcm_Courant.id])"
                        name="{{'Normal'+'qcm'+courant.qcm_Courant.id+'ques'+courant.question_Courante.id}}"
                        />
@@ -61,13 +61,13 @@
     <!-- Formulaire d'inscription -->
     <div ng-show="courant.formulaireInscription" class="globalForm" >
         <form method="POST" ng-submit="courant.inscription()" name="Inscription" >
-            <span >nom :</span><input type="text" name="Name" ng-model="courant.utilisateurIns.Name" required/><br>
-            <span >prenom :</span><input type="text" name="Surname" ng-model="courant.utilisateurIns.Surname" required/><br>
-            <span >Date de naissance :</span><input type="Date"  name="Birth" ng-model="courant.utilisateurIns.Birth" required/><br>
-            <span >Genre :</span><input type="text" name="Gender" ng-model="courant.utilisateurIns.Gender" required/><br>
-            <span > Code Postal :</span><input type="text" name="Postal" ng-model="courant.utilisateurIns.Postal" required/><br>
-            <span >Ville :</span><input type="text" name="Town" ng-model="courant.utilisateurIns.Town" required/><br>
-            <span >Nationalite :</span><select ng-model="Nat" ng-model="courant.utilisateurIns.Nat" required ><option value="Nat1">Nat1</option><option value="Nat2">Nat2</option><option value="Nat3">Nat3</option></select><br>
+            <span >nom :</span><input type="text" name="Name" ng-model="courant.utilisateurIns.Name"  ><br>
+            <span >prenom :</span><input type="text" name="Surname" ng-model="courant.utilisateurIns.Surname" /><br>
+            <span >Date de naissance :</span><input type="Date"  name="Birth" ng-model="courant.utilisateurIns.Birth"  /><br>
+            <span >Genre :</span><input type="text" name="Gender" ng-model="courant.utilisateurIns.Gender"  /><br>
+            <span > Code Postal :</span><input type="text" name="Postal" ng-model="courant.utilisateurIns.Postal" /><br>
+            <span >Ville :</span><input type="text" name="Town" ng-model="courant.utilisateurIns.Town"  /><br>
+            <span >Nationalite :</span><select ng-model="Nat" ng-model="courant.utilisateurIns.Nat"><option value="Nat1" >Nat1</option><option value="Nat2">Nat2</option><option value="Nat3">Nat3</option></select><br>
             <input type="submit" value="Valider"/>
         </form>
         <button ng-click="courant.cancel('inscription')">Annuler</button>

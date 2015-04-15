@@ -233,58 +233,6 @@ var qcm_Table =
         }
 
     ];
-
-function Utilisateur(name, surname, birth, gender, postal, town, nat, token){
-    this.name=name;
-    this.surname=surname;
-    this.birth=birth;
-    this.gender=gender;
-    this.postal=postal;
-    this.town=town;
-    this.nationality=nat;
-    this.token=token;
-}
-
-
-app.get('/rest/myResource/:resourceId', function(req,res){
-	res.json({
-		id:1,
-		name:'javascript'
-	});
-});
-
-app.get('/rest/QCMTable', function(req, res)
-{
-
-    res.json(qcm_Table);
-})
-
-app.get('/rest/QCMList', function(req,res){
-    var Titres= [];
-    for( var i=0; i<qcm_Table.length; i++){
-        Titres[i]={id:i,Titre:qcm_Table[i].Titre};
-    }
-    res.json(Titres);
-
-
-});
-app.post('/rest/User', function(req,res)
-{
-
-    var Now =  Date.now();
-    var token=
-    {
-        value:Math.floor(Math.random()*9999999+1),
-        created: Now,
-        disqualified:false
-    };
-    var util = new Utilisateur(req.body.Name, req.body.Surname, req.body.Birth, req.body.Gender, req.body.Postal, req.body.Town, req.body.Nat, token);
-    userTable[userTable.length]=util;
-    console.log(JSON.stringify(userTable));
-    var returnValue = userTable.length-1
-    res.end(returnValue.toString());
-}
-)
 function checkToken(id)
 {
     var now = Date.now();
@@ -307,21 +255,104 @@ function checkToken(id)
 
 
 }
-app.get('/rest/QCMList/:QcmId', function(req,res){
+function Utilisateur(name, surname, birth, gender, postal, town, nat, token)
+{
+    this.name=name;
+    this.surname=surname;
+    this.birth=birth;
+    this.gender=gender;
+    this.postal=postal;
+    this.town=town;
+    this.nationality=nat;
+    this.token=token;
+}
+app.get('/rest/myResource/:resourceId', function(req,res)
+{
+	res.json({
+		id:1,
+		name:'javascript'
+	});
+});
+app.get('/rest/QCMTable', function(req, res)
+{
+
+    res.json(qcm_Table);
+});
+app.get('/rest/QCMList', function(req,res)
+{                 // GET ALL QCM TITRE
+    var Titres= [];
+    for( var i=0; i<qcm_Table.length; i++){
+        Titres[i]={id:i,Titre:qcm_Table[i].Titre};
+    }
+    res.json(Titres);
+
+
+});
+app.post('/rest/QCMList', function(req, res)
+{
+    qcm_Table[qcm_Table.length]= {id: qcm_Table.length, Titre:req.body.Titre}
+
+
+});
+app.post('/rest/User', function(req,res)
+{
+
+    var Now =  Date.now();
+    var token=
+    {
+        value:Math.floor(Math.random()*9999999+1),
+        created: Now,
+        disqualified:false
+    };
+    var util = new Utilisateur(req.body.Name, req.body.Surname, req.body.Birth, req.body.Gender, req.body.Postal, req.body.Town, req.body.Nat, token);
+    userTable[userTable.length]=util;
+    console.log(JSON.stringify(userTable));
+    var returnValue = userTable.length-1
+    res.end(returnValue.toString());
+});
+app.get('/rest/QCMList/:qcmid', function(req,res)           // GET QCM avec QUESTIONS
+{
+    console.log(req.params);
     var QCM=
     {
-        id:req.params.QcmId,
-        Titre:qcm_Table[req.params.QcmId].Titre,
-        questions: _.cloneDeep(qcm_Table[req.params.QcmId].questions)
+        id:req.params.qcmid,
+        Titre:qcm_Table[req.params.qcmid].Titre,
+        questions: _.cloneDeep(qcm_Table[req.params.qcmid].questions)
     };
-    for(var i =0;i<qcm_Table[req.params.QcmId].questions.length;i++)
+
+    for(var i =0;i<qcm_Table[req.params.qcmid].questions.length;i++)
     {
         delete QCM.questions[i].reponses;
     }
     res.json(QCM);
 
 });
-app.get('/rest/QCMList/:id_QCM/UserId/:userId/ScoreQCM/:rep', function (req, res) {
+app.post('/rest/QCMList/:qcmid', function(req, res)         // POST QCM avec QUESTIONS
+{
+    qcm_Table[req.body.id].Titre=req.body.Titre;
+    for(var i =0; i<req.body.questions.length; i++)
+    {
+        qcm_Table[req.body.id].questions[i].Titre= req.body.questions[i].Titre;
+
+    }
+    console.log(JSON.stringify(req.body));
+});
+
+app.delete('/rest/QCMList/:qcmid', function(req, res)
+{
+    qcm_Table.splice(req.body.id,1);
+    for(var i =0; i<qcm_Table.length;i++)
+    {
+        qcm_Table[i].id = i;
+
+    }
+
+})
+
+
+
+app.get('/rest/QCMList/:id_QCM/UserId/:userId/ScoreQCM/:rep', function (req, res)
+{
     var id_Us = req.params.userId;
     console.log(id_Us);
     console.log(userTable[id_Us]);
@@ -370,25 +401,59 @@ app.get('/rest/QCMList/:id_QCM/UserId/:userId/ScoreQCM/:rep', function (req, res
     }
 
 });
-app.get('/rest/QCMList/:QcmId/QuesList/:quesId', function(req,res)
+app.get('/rest/QCMList/:qcmid/QuesList',function(req, res)
 {
+    res.json( qcm_Table[req.params.qcmid].questions);
+
+})
+app.get('/rest/QCMList/:qcmid/QuesList/:quesid', function(req,res)                  // GET QUESTION avec REPONSES SANS BOOLEAN
+{
+    console.log(req.params);
     var Question=
     {
-        id:req.params.quesId,
-        Titre:qcm_Table[req.params.QcmId].questions[req.params.quesId].Titre,
-        reponses:_.cloneDeep(qcm_Table[req.params.QcmId].questions[req.params.quesId].reponses)
+        id:req.params.quesid,
+        Titre:qcm_Table[req.params.qcmid].questions[req.params.quesid].Titre,
+        reponses:_.cloneDeep(qcm_Table[req.params.qcmid].questions[req.params.quesid].reponses)
     };
-    for(var i =0;i<qcm_Table[req.params.QcmId].questions[req.params.quesId].reponses.length;i++)
+    for(var i =0;i<qcm_Table[req.params.qcmid].questions[req.params.quesid].reponses.length;i++)
     {
         delete(Question.reponses[i].isTrue);
 
     }
     res.json(Question);
 
+});
+app.post('/rest/QCMList/:qcmid/QuesList/:quesid', function(req,res)
+{
+    console.log(qcm_Table[req.params.qcmid].questions[req.params.quesid]);
+    qcm_Table[req.params.qcmid].questions[req.params.quesid].Titre=req.body.Titre;
+    qcm_Table[req.params.qcmid].questions[req.params.quesid].reponses=req.body.reponses;
+    console.log(JSON.stringify(qcm_Table));
+
+});
+app.delete('/rest/QCMList/:qcmid/QuesList/:quesid',function(req,res){
+    qcm_Table[req.params.qcmid].questions.splice(req.params.quesid, 1);
+    for(var i =0; i<qcm_Table[req.params.qcmid].questions.length;i++)
+    {
+        qcm_Table[req.params.qcmid].questions[i].id = i;
+
+    }
+    console.log(JSON.stringify(qcm_Table));
+    console.log("DDDDDDD");
+
 })
+app.post('/rest/QCMList/:qcmid/QuesList', function(req,res)
+{
+    console.log("test");
+    var newId=qcm_Table[req.params.qcmid].questions.length;
+    qcm_Table[req.params.qcmid].questions[newId]={id:newId,Titre: req.body.Titre, reponses:req.body.reponses};
+    console.log(JSON.stringify(qcm_Table[req.params.qcmid].questions[newId]));
+    console.log(JSON.stringify(qcm_Table[req.params.qcmid].questions));
 
+});
 
-app.post('/rest/answer', function(req, res){
+app.post('/rest/answer', function(req, res)
+{
 	res.json({
 		successes:1,
 		errors:1

@@ -1,6 +1,18 @@
 angular.module('QCM',['ngResource','ngRoute'])
+    .factory('QcmFactory',['$resource',function($resource){
+        return $resource('/rest/QCMList/:id',
+            {id:"@id"}
+        );
 
-    .controller('QCM_courant', ['$scope', '$http', function($scope, $http )
+    }])
+    .factory('QuesFactory', ['$resource', function($resource){
+        return $resource('/rest/QCMList/:qcmid/QuesList/:quesid',
+            {qcmid:"@qcmid", quesid:"@quesid"}
+        );
+
+    }])
+
+    .controller('QCM_courant', ['$scope',  '$http','QcmFactory','QuesFactory', function($scope, $http, QcmFactory, QuesFactory )
     {
         var self = this;
         self.affScore = false;
@@ -9,9 +21,29 @@ angular.module('QCM',['ngResource','ngRoute'])
         self.ques_Internal_Input=false;
         self.type_Edit="";
         self.qcm="";
+        self.qcmComplete=false;
         self.connectedUserId="";
         self.RepQuest = [
                    ];
+        self.radio = [];
+        console.log("PLOP");
+        /*self.newQues = new QuesFactory();
+        console.log("PLOP2");
+        alert(JSON.stringify(self.newQues));
+        self.newQues.Titre = "UAZHEIAZGEIAZGEIAZEIAZGEAIZGEI";
+        self.newQues.$save();*/
+
+        console.log("PLOP3");
+        QuesFactory.get({qcmid:1,quesid:0})
+            .$promise.then(function(ques){
+                console.log(JSON.stringify(ques));
+                console.log("PROMESSE");
+                ques.Titre="UAZHEIAZGEIAZGEIAZEIAZGEAIZGEI";
+                ques.$save({qcmid:0,quesid:0});
+
+
+            });
+        QuesFactory.delete({qcmid:0,quesid:0});
         $http.get("./rest/QCMList").then
         (
             function(response)
@@ -25,7 +57,24 @@ angular.module('QCM',['ngResource','ngRoute'])
             }
         );
 
+        /*{
+            self.qcms = QcmFactory.query();
+            QcmFactory.get({id: 0})
+                .$promise.then(function (qcm) {
+                    alert(qcm.Titre);
+                    qcm.Titre = "NOUVEAU";
+                    //qcm.Titre="Edited";
+                    alert(JSON.stringify(qcm.questions));
+                    qcm.$save();
 
+
+                }
+            );
+            self.newQCM = new QcmFactory();
+            alert(JSON.stringify(self.newQCM));
+            self.newQCM.Titre = "New";
+            self.newQCM.$save();
+        }*/
 
 
         self.selection = [
@@ -47,6 +96,7 @@ angular.module('QCM',['ngResource','ngRoute'])
         ];
         self.qcm=[];
 
+
         self.setCourant = function(qcm)
         {
             self.qcmTemp=qcm;
@@ -64,7 +114,7 @@ angular.module('QCM',['ngResource','ngRoute'])
                     function(responseQCM){
 
                         self.qcm_Courant= responseQCM.data;  // QCM_ID/QCM_TITRE/QUESTIONS sans REPONSE
-
+                        self.RepQuest=[];
                         self.QIndex=0;
                         self.score=0;
                         self.affScore=false;
@@ -72,7 +122,13 @@ angular.module('QCM',['ngResource','ngRoute'])
                             function(responseQues){
 
                                 self.question_Courante=responseQues.data; // QUES_ID/QUES_TITRE/REPONSES sans ISTRUE
-
+                                for(var i = 0; i<self.question_Courante.reponses.length;i++)
+                                {
+                                    if(self.RepQuest[self.question_Courante.id]==i && self.radio[i] != undefined)
+                                        self.radio[i]=true;
+                                    else
+                                        self.radio[i]=false;
+                                }
                                 //  alert(JSON.stringify(self.question_Courante));
                                 if(self.qcm[self.qcm_Courant.id]) {
                                     self.qcm.styleReponse = self.selection[self.qcm_Courant.id].questions;
@@ -153,6 +209,19 @@ angular.module('QCM',['ngResource','ngRoute'])
 
                     if (self.question_Courante.reponses[id_Rep]) {
                         self.RepQuest[self.question_Courante.id]=id_Rep;
+                        var nbRep = 0;
+                        for(var i = 0; i<self.qcm_Courant.questions.length;i++)
+                        {
+
+                            if(self.RepQuest[i] != undefined)
+                                nbRep++;
+                        }
+                        if(nbRep==self.qcm_Courant.questions.length) {
+
+                            self.qcmComplete = true;
+                            alert(self.qcmComplete);
+                        }
+                        alert(nbRep);
                     }
 
                     if(self.selection[self.qcm_Courant.id] == undefined)
@@ -209,12 +278,13 @@ angular.module('QCM',['ngResource','ngRoute'])
 
                 }
             }
-            self.QIndex++;
+            if(self.QIndex<self.qcm_Courant.questions.length-1)
+                self.QIndex++;
 
 
 
-
-            if(self.QIndex==self.qcm_Courant.questions.length)
+            alert(self.qcmComplete);
+            if(self.qcmComplete)
             {
                 self.re_get='';
                 //alert(JSON.stringify(self.RepQuest));
@@ -244,12 +314,19 @@ angular.module('QCM',['ngResource','ngRoute'])
                 delete(self.question_Courante);
                 self.affScore=true;
             }
-            else{
+            else if(self.QIndex<self.qcm_Courant.questions.length)
+            {
                 $http.get("./rest/QCMList/"+self.qcm_Courant.id+"/QuesList/"+self.QIndex).then(
                     function(response){
 
                         self.question_Courante=response.data; // QUES_ID/QUES_TITRE/REPONSES sans ISTRUE
-
+                        for(var i = 0; i<self.question_Courante.reponses.length;i++)
+                        {
+                            if(self.RepQuest[self.question_Courante.id]==i && self.radio[i] != undefined)
+                                self.radio[i]=true;
+                            else
+                                self.radio[i]=false;
+                        }
                         //alert(JSON.stringify(self.question_Courante));
                         //if(self.qcm[self.qcm_Courant.id]) {
                         //self.qcm.styleReponse = self.selection[self.qcm_Courant.id].questions;
@@ -269,7 +346,34 @@ angular.module('QCM',['ngResource','ngRoute'])
         self.moveQ = function(direction)
         {
             self.QIndex+=direction;
-            self.question_Courante = $scope.qcm_Table[self.qcm_Courant.id].questions[self.QIndex];
+
+            $http.get("./rest/QCMList/"+self.qcm_Courant.id+"/QuesList/"+self.QIndex).then(
+                function(response){
+
+                    self.question_Courante=response.data; // QUES_ID/QUES_TITRE/REPONSES sans ISTRUE
+
+                    for(var i = 0; i<self.question_Courante.reponses.length;i++)
+                    {
+                        if(self.RepQuest[self.question_Courante.id]==i && self.radio[i] != undefined)
+                        self.radio[i]=true;
+                        else
+                        self.radio[i]=false;
+                    }
+                    //alert(JSON.stringify(self.question_Courante));
+                    //if(self.qcm[self.qcm_Courant.id]) {
+                    //self.qcm.styleReponse = self.selection[self.qcm_Courant.id].questions;
+                    // }
+
+                },
+                function(errResponse)
+                {
+                    //alert("question_Courante: "+JSON.stringify(self.question_Courante));
+
+                    //alert("PAS COOL imen");
+                    console.log(errResponse.data);
+                    console.error("error while fetching notes");
+                })
+            //self.question_Courante = self.qcm_Courant[self.qcm_Courant.id].questions[self.QIndex];
         }
         self.switchEdition = function()
         {
