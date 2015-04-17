@@ -1,11 +1,20 @@
-.cleared
-{
-    color:deepskyblue;
-}
 
+a{
+    text-decoration:none;
+    color:black;
+}
+.canClick
+{
+    cursor: pointer;
+
+}
+.finish span
+{
+    color:deepskyblue ;
+}
 .isTrue
 {
-    color:limegreen !important;
+    color:limegreen ;
 }
 .selected
 {

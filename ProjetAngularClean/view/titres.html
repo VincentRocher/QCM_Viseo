@@ -1,0 +1,8 @@
+<div ng-controller="titresController as titreCtrl">
+<button ng-click="titreCtrl.filter = {}"> Afficher Tout</button>
+<button ng-click="titreCtrl.filter = {finish:true}"> Afficher Les QCM répondues</button>
+<button ng-click="titreCtrl.filter = {finish:undefined}"> QCM non repondues</button>
+    <div ng-repeat="qcm in qcm_Table | filter:titreCtrl.filter" ng-class="courant.qcm[qcm.id]">
+        <a ng-click="titreCtrl.goQcm($index)" ng-class="titreCtrl.validate(qcm)" class="canClick"><span>{{qcm.Titre}}</span></a>
+    </div>
+</div>

@@ -7,16 +7,13 @@ var app = express();
 
 app.use('/', express.static(__dirname+'../..'));
 app.use('/rest', bodyParser.json());
-app.use('/rest',bodyParser.urlencoded({     // to support URL-encoded bodies
-    extended: true
-}));
+app.use('/rest',bodyParser.urlencoded({extended: true}));     // to support URL-encoded bodies
 app.listen(9000);
 console.log("Server Lancé sur localhost:9000/");
 
 
 var userTable = [] ;
-var qcm_Table =
-    [
+var qcm_Table =[
         {   id:0,
             Titre: "javascript",
             questions:
@@ -43,13 +40,10 @@ var qcm_Table =
                                 }
 
                             ]
-
-
                     },
                     {
                         id: 1,
                         Titre: "Comment faire apparaitre un message d'alerte?",
-
                         reponses:
                             [
                                 {
@@ -69,13 +63,10 @@ var qcm_Table =
                                 }
 
                             ]
-
-
                     },
                     {
                         id: 2,
                         Titre: "3?",
-
                         reponses:
                             [
                                 {
@@ -93,19 +84,12 @@ var qcm_Table =
                                     Titre: "alert()",
                                     isTrue:true
                                 }
-
                             ]
-
-
                     }
-
-
                 ]
-
         },
         {   id:1,
             Titre: "HTML5",
-
             questions:
                 [
                     {
@@ -131,8 +115,6 @@ var qcm_Table =
                                 }
 
                             ]
-
-
                     },
                     {
                         id: 1,
@@ -156,17 +138,12 @@ var qcm_Table =
                                 }
 
                             ]
-
-
                     }
-
-
                 ]
 
         },
         {   id:2,
             Titre: "Angular",
-
             questions:
                 [
                     {
@@ -190,10 +167,7 @@ var qcm_Table =
                                     Titre:"ng-cacher:oui",
                                     isTrue:false
                                 }
-
                             ]
-
-
                     },
                     {
                         id: 1,
@@ -216,15 +190,9 @@ var qcm_Table =
                                     Titre: "$scope",
                                     isTrue:true
                                 }
-
                             ]
-
-
                     },
-
-
                 ]
-
         },
         {
             id: 3,
@@ -254,7 +222,7 @@ function checkToken(id)
     }
 
 
-}
+};
 function Utilisateur(name, surname, birth, gender, postal, town, nat, token)
 {
     this.name=name;
@@ -265,7 +233,7 @@ function Utilisateur(name, surname, birth, gender, postal, town, nat, token)
     this.town=town;
     this.nationality=nat;
     this.token=token;
-}
+};
 app.get('/rest/myResource/:resourceId', function(req,res)
 {
 	res.json({
@@ -275,7 +243,6 @@ app.get('/rest/myResource/:resourceId', function(req,res)
 });
 app.get('/rest/QCMTable', function(req, res)
 {
-
     res.json(qcm_Table);
 });
 app.get('/rest/QCMList', function(req,res)
@@ -285,18 +252,14 @@ app.get('/rest/QCMList', function(req,res)
         Titres[i]={id:i,Titre:qcm_Table[i].Titre};
     }
     res.json(Titres);
-
-
 });
 app.post('/rest/QCMList', function(req, res)
 {
     qcm_Table[qcm_Table.length]= {id: qcm_Table.length, Titre:req.body.Titre}
-
-
+    res.end("QCM Cree");
 });
 app.post('/rest/User', function(req,res)
 {
-
     var Now =  Date.now();
     var token=
     {
@@ -306,97 +269,77 @@ app.post('/rest/User', function(req,res)
     };
     var util = new Utilisateur(req.body.Name, req.body.Surname, req.body.Birth, req.body.Gender, req.body.Postal, req.body.Town, req.body.Nat, token);
     userTable[userTable.length]=util;
-    console.log(JSON.stringify(userTable));
+
     var returnValue = userTable.length-1
     res.end(returnValue.toString());
 });
 app.get('/rest/QCMList/:qcmid', function(req,res)           // GET QCM avec QUESTIONS
 {
-    console.log(req.params);
+
     var QCM=
     {
         id:req.params.qcmid,
         Titre:qcm_Table[req.params.qcmid].Titre,
         questions: _.cloneDeep(qcm_Table[req.params.qcmid].questions)
     };
-
+    if(qcm_Table[req.params.qcmid].questions)
     for(var i =0;i<qcm_Table[req.params.qcmid].questions.length;i++)
     {
         delete QCM.questions[i].reponses;
     }
     res.json(QCM);
-
 });
 app.post('/rest/QCMList/:qcmid', function(req, res)         // POST QCM avec QUESTIONS
 {
-    qcm_Table[req.body.id].Titre=req.body.Titre;
-    for(var i =0; i<req.body.questions.length; i++)
-    {
-        qcm_Table[req.body.id].questions[i].Titre= req.body.questions[i].Titre;
+    if(qcm_Table[req.body.id]) {
+        qcm_Table[req.body.id].Titre = req.body.Titre;
+        for (var i = 0; i < req.body.questions.length; i++) {
+            qcm_Table[req.body.id].questions[i].Titre = req.body.questions[i].Titre;
 
+        }
+
+        res.end("QCM Mis a Jour");
     }
-    console.log(JSON.stringify(req.body));
+    else
+    {
+        res.end("QCM Inexistant");
+    }
 });
-
 app.delete('/rest/QCMList/:qcmid', function(req, res)
 {
-    qcm_Table.splice(req.body.id,1);
+    qcm_Table.splice(req.body.qcmid,1);
     for(var i =0; i<qcm_Table.length;i++)
     {
         qcm_Table[i].id = i;
-
     }
-
-})
-
-
-
-app.get('/rest/QCMList/:id_QCM/UserId/:userId/ScoreQCM/:rep', function (req, res)
+    res.end("QCM Supprimé");
+});
+app.post('/rest/QCMList/:id_QCM/UserId/:userId/ScoreQCM', function (req, res)
 {
+
     var id_Us = req.params.userId;
-    console.log(id_Us);
-    console.log(userTable[id_Us]);
+
     if(userTable[id_Us] != undefined)
     {
-        console.log("1");
-        console.log(checkToken(id_Us));
+
         if(checkToken(id_Us))
         {
-            console.log("2");
-            var reponseSheet=req.params.rep.split('x');
-            var tab= reponseSheet.splice(reponseSheet.length-1,1);
+            var reponseSheet=req.body.answers;
+            console.log(reponseSheet);
             var id_qcm= req.params.id_QCM;
-            // console.log(id_req);
-
-            //reponseSheet.pop();
-
             var resultatFinal=0;
-
-
             for(var j=0; j<qcm_Table[id_qcm].questions.length; j++)
             {
-
-                // console.log(req.body.questions[j].reponses);
-                // console.log(mylist[i].questions[j].reponses[k].resp);
-                //delete mylist[i].questions[j].reponses[k].vrais;
-
-
                 if((qcm_Table[id_qcm].questions[j].reponses[reponseSheet[j]].isTrue))
                 {
                     resultatFinal++;
                 }
-
-
             }
-
-            console.log(resultatFinal);
-            userTable[id_Us].token.disqualified=true;
             res.json({resultat: resultatFinal});
-
         }
         else
         {
-            res.json({resultat:-1})
+            res.json({resultat:"Token Invalide"})
         }
     }
 
@@ -404,54 +347,65 @@ app.get('/rest/QCMList/:id_QCM/UserId/:userId/ScoreQCM/:rep', function (req, res
 app.get('/rest/QCMList/:qcmid/QuesList',function(req, res)
 {
     res.json( qcm_Table[req.params.qcmid].questions);
-
-})
-app.get('/rest/QCMList/:qcmid/QuesList/:quesid', function(req,res)                  // GET QUESTION avec REPONSES SANS BOOLEAN
+});
+app.get('/rest/QCMList/:qcmid/QuesListComplete/:quesid', function(req, res)
 {
-    console.log(req.params);
     var Question=
     {
         id:req.params.quesid,
         Titre:qcm_Table[req.params.qcmid].questions[req.params.quesid].Titre,
-        reponses:_.cloneDeep(qcm_Table[req.params.qcmid].questions[req.params.quesid].reponses)
+        reponses:qcm_Table[req.params.qcmid].questions[req.params.quesid].reponses
     };
-    for(var i =0;i<qcm_Table[req.params.qcmid].questions[req.params.quesid].reponses.length;i++)
-    {
-        delete(Question.reponses[i].isTrue);
-
-    }
     res.json(Question);
+});
+app.get('/rest/QCMList/:qcmid/QuesList/:quesid', function(req,res)                  // GET QUESTION avec REPONSES SANS BOOLEAN
+{
+    if(qcm_Table[req.params.qcmid].questions[req.params.quesid]) {
+        var Question =
+        {
+            id: req.params.quesid,
+            Titre: qcm_Table[req.params.qcmid].questions[req.params.quesid].Titre,
+            reponses: _.cloneDeep(qcm_Table[req.params.qcmid].questions[req.params.quesid].reponses)
+        };
+        for (var i = 0; i < qcm_Table[req.params.qcmid].questions[req.params.quesid].reponses.length; i++) {
+            delete(Question.reponses[i].isTrue);
+        }
+        res.json(Question);
+    }
+    else
+    {
+        res.json(null);
+    }
 
 });
 app.post('/rest/QCMList/:qcmid/QuesList/:quesid', function(req,res)
 {
-    console.log(qcm_Table[req.params.qcmid].questions[req.params.quesid]);
     qcm_Table[req.params.qcmid].questions[req.params.quesid].Titre=req.body.Titre;
     qcm_Table[req.params.qcmid].questions[req.params.quesid].reponses=req.body.reponses;
-    console.log(JSON.stringify(qcm_Table));
-
+    res.end("Question Mise a jour");
 });
-app.delete('/rest/QCMList/:qcmid/QuesList/:quesid',function(req,res){
+app.delete('/rest/QCMList/:qcmid/QuesList/:quesid',function(req,res)
+{
     qcm_Table[req.params.qcmid].questions.splice(req.params.quesid, 1);
     for(var i =0; i<qcm_Table[req.params.qcmid].questions.length;i++)
     {
         qcm_Table[req.params.qcmid].questions[i].id = i;
-
     }
-    console.log(JSON.stringify(qcm_Table));
-    console.log("DDDDDDD");
-
-})
-app.post('/rest/QCMList/:qcmid/QuesList', function(req,res)
-{
-    console.log("test");
-    var newId=qcm_Table[req.params.qcmid].questions.length;
-    qcm_Table[req.params.qcmid].questions[newId]={id:newId,Titre: req.body.Titre, reponses:req.body.reponses};
-    console.log(JSON.stringify(qcm_Table[req.params.qcmid].questions[newId]));
-    console.log(JSON.stringify(qcm_Table[req.params.qcmid].questions));
+    res.end("Question Supprimée");
 
 });
+app.post('/rest/QCMList/:qcmid/QuesList', function(req,res)
+{
 
+    if(qcm_Table[req.params.qcmid].questions)
+    var newId=qcm_Table[req.params.qcmid].questions.length;
+    else {
+        var newId = 0;
+        qcm_Table[req.params.qcmid].questions=[];
+    }
+    qcm_Table[req.params.qcmid].questions[newId]={id:newId,Titre: req.body.Titre, reponses:req.body.reponses};
+    res.end("Question Cree");
+});
 app.post('/rest/answer', function(req, res)
 {
 	res.json({
