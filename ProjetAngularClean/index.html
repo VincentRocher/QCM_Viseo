@@ -3,100 +3,14 @@
     <meta charset="UTF-8">
 </head>
 <html ng-app="QCM">
-<body ng-controller="indexControleur as indexCtrl">
+<body>
 <script src="./js/angular.js" ></script>
 <script src="./js/angular-resource.js" ></script>
 <script src="./js/angular-route.js" ></script>
 <script type="text/javascript" src="./js/qcm.js"></script>
 <link rel="stylesheet" href="./css/style.css" />
-<a href="#/index">retour aux QCM</a>
-
-<!--<button ng-click="indexCtrl.switchEdition()" ng-disabled="indexCtrl.globalInputText" ng-hide="indexCtrl.modeEdition" class="edit">Mode Edition</button>
-<button ng-disabled="indexCtrl.globalInputText"  ng-click="indexCtrl.switchEdition()"ng-show="indexCtrl.modeEdition">Mode Normal</button>-->
+<a href="#/index">Home</a>
+<br/>
 <div ng-view></div>
-<!-- Module normal -->
-
-
-
-
-<!-- Login de securite pour l'édition-->
-<div class="globalForm" ng-show="indexCtrl.modeEditionSecurite">
-    <form ng-submit="indexCtrl.securiteEdition()" name="securiteEdition">
-        <input type="text" name="loginSecu" ng-model="indexCtrl.user.login" ng-minlength="2" ng-maxlength="10" required/>
-        <br/>
-        <span ng-show="securiteEdition.loginSecu.$error.minlength"> more than 2 char</span>
-        <span ng-show="securiteEdition.loginSecu.$error.maxlength"> less than 10 char</span>
-        <span ng-show="securiteEdition.loginSecu.$error.required"> required</span>
-        <input type="password" name="PwdSecu" ng-model="indexCtrl.user.pwd" required/>
-        <br/>
-        <span ng-show="securiteEdition.PwdSecu.$error.required"> required</span>
-        <input type="submit" value="confirmer">
-    </form>
-    <button ng-submit="indexCtrl.cancel('securite')">Annuler</button>
-</div>
-
-
-
-
-<!-- Module d'édition -->
-<div ng-show="indexCtrl.modeEdition">
-    <div ng-repeat="qcm in qcm_Table">
-        <input type="text"  name ="{{'qcm'+indexCtrl.qcm_Courant.id}}" placeholder="{{qcm.Titre}}" ng-click="indexCtrl.select(qcm)" ng-model="indexCtrl.qcm_Edit[qcm.id].Titre"   value ="{{qcm.Titre}}"/>
-        <button ng-disabled="indexCtrl.type_Edit != 'qcm' || indexCtrl.qcm_Courant.id != qcm.id" ng-click="indexCtrl.save(qcm.id,'qcm')" class="edit">Sauvegarder</button>
-        <button ng-disabled="indexCtrl.type_Edit != 'qcm' || indexCtrl.qcm_Courant.id != qcm.id" ng-click="indexCtrl.cancel('Edit_QCM')" class="edit">Annuler</button>
-        <button ng-disabled="indexCtrl.type_Edit != 'qcm' || indexCtrl.qcm_Courant.id != qcm.id || indexCtrl.qcm_Edit[qcm.id].Titre.length >0" ng-click="indexCtrl.InternalEdit('qcm', qcm)" class="edit">Editer QCM</button>
-        <button ng-disabled="indexCtrl.type_Edit != 'qcm' || indexCtrl.qcm_Courant.id != qcm.id || indexCtrl.qcm_Edit[qcm.id].Titre.length >0" ng-click="indexCtrl.supprimer(qcm.id,'qcm')" class="delete">Supprimer QCM</button>
-    </div>
-    <input ng-click="indexCtrl.selectN()" type="text" ng-model="indexCtrl.create_Qcm_Input" name="create_Qcm_Input "value="Creer QCM"/><button ng-disabled="indexCtrl.qcm_Input" ng-click="indexCtrl.nouveau('qcm')" class="create">Creer QCM</button>
-
-    <!-- edition de Questions -->
-    <br>
-    <br>
-    <span ng-show="indexCtrl.qcm_Courant" >QCM actif:{{indexCtrl.qcm_Courant.Titre}}</span>
-    <br>
-    <br>
-    <div ng-repeat="question in indexCtrl.qcm_Courant.questions" ng-hide="!indexCtrl.qcm_Internal_Input ">
-
-        <input type="text" name ="{{'ques'+indexCtrl.question_Courante.id}}" ng-model="indexCtrl.ques_Edit[question.id].Titre"  ng-click="indexCtrl.selectQ(question)" value="{{question.Titre}}" placeholder="{{question.Titre}}"/>
-        <button ng-disabled="indexCtrl.type_Edit != 'question' || indexCtrl.question_Courante.id != question.id" ng-click="indexCtrl.save(question.id,'question')" class="edit">Sauvegarder</button>
-        <button ng-disabled="indexCtrl.type_Edit != 'question' || indexCtrl.question_Courante.id != question.id" ng-click="indexCtrl.cancel('Edit_Ques')" class="edit">Annuler</button>
-        <button ng-disabled="indexCtrl.type_Edit != 'question' || indexCtrl.question_Courante.id != question.id || indexCtrl.ques_Edit[question.id].Titre.length >0" ng-click="indexCtrl.InternalEdit('question', question)" class="edit">editer</button>
-        <button ng-disabled="indexCtrl.type_Edit != 'question' || indexCtrl.question_Courante.id != question.id || indexCtrl.ques_Edit[question.id].Titre.length >0" ng-click="indexCtrl.supprimer(question.id, 'question')" class="delete">supprimer</button>
-    </div>
-    <input ng-click="indexCtrl.selectN()" ng-hide="!indexCtrl.qcm_Internal_Input " type="text" ng-model="indexCtrl.create_Question_Input" name="create_Question_Input"value="Creer question"/>
-    <button ng-disabled="indexCtrl.ques_Input" ng-show="indexCtrl.qcm_Courant && indexCtrl.qcm_Internal_Input" ng-click="indexCtrl.nouveau('question')" class="create">Creer Question</button>
-
-    <!-- edition de Reponses -->
-    <br>
-    <br>
-    <span ng-show="indexCtrl.question_Courante" >Question active:{{indexCtrl.question_Courante.Titre}}</span>
-    <br>
-    <br>
-    <button ng-hide="!indexCtrl.ques_Internal_Input"ng-click="indexCtrl.save(self.question_Courante.id,'question')" class="edit">Sauvegarder</button>
-    <button ng-hide="!indexCtrl.ques_Internal_Input" ng-click="indexCtrl.cancel('Edit_Rep')" class="edit">Annuler</button>
-    {{indexCtrl.question_Courante}}
-    <div ng-repeat="reponse in indexCtrl.question_Courante.reponses" ng-hide="!indexCtrl.ques_Internal_Input">
-        <input type="radio"
-               ng-disabled=""
-               ng-value="true"
-               ng-change="indexCtrl.uncheckOther(reponse)"
-               ng-model="indexCtrl.question_Courante.reponses[reponse.id].isTrue"
-               name="{{'qcm'+indexCtrl.qcm_Courant.id+'ques'+indexCtrl.question_Courante.id}}"
-               value="true"
-               />
-        <input type="text" name ="{{'rep'+indexCtrl.reponse_Courante.id}}" ng-model="indexCtrl.rep_Edit[reponse.id].Titre" value="{{reponse.Titre}}" placeholder="{{reponse.Titre}}" ng-click="indexCtrl.selectR(reponse)"/>
-
-        <span>Supprimer:</span>
-        {{reponse.id}}
-    <input type="checkbox" value="false" ng-model="indexCtrl.repDel[reponse.id]" />
-    </div>
-
-    <input ng-click="indexCtrl.selectN()" ng-hide="!indexCtrl.ques_Internal_Input" type="text" ng-model="indexCtrl.create_Reponse_Input" name="create_Reponse_Input"value="Creer reponse"/>
-    <button ng-show="indexCtrl.question_Courante && indexCtrl.ques_Internal_Input" ng-click="indexCtrl.nouveau('reponse')" class="create">Creer Reponse</button>
-</div>
-
-
-
-
 </body>
 </html>

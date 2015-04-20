@@ -13,7 +13,7 @@ console.log("Server Lancé sur localhost:9000/");
 
 
 var userTable = [] ;
-var qcm_Table =[
+var qcmTable =[
         {   id:0,
             Titre: "javascript",
             questions:
@@ -243,19 +243,19 @@ app.get('/rest/myResource/:resourceId', function(req,res)
 });
 app.get('/rest/QCMTable', function(req, res)
 {
-    res.json(qcm_Table);
+    res.json(qcmTable);
 });
 app.get('/rest/QCMList', function(req,res)
 {                 // GET ALL QCM TITRE
     var Titres= [];
-    for( var i=0; i<qcm_Table.length; i++){
-        Titres[i]={id:i,Titre:qcm_Table[i].Titre};
+    for( var i=0; i<qcmTable.length; i++){
+        Titres[i]={id:i,Titre:qcmTable[i].Titre};
     }
     res.json(Titres);
 });
 app.post('/rest/QCMList', function(req, res)
 {
-    qcm_Table[qcm_Table.length]= {id: qcm_Table.length, Titre:req.body.Titre}
+    qcmTable[qcmTable.length]= {id: qcmTable.length, Titre:req.body.Titre}
     res.end("QCM Cree");
 });
 app.post('/rest/User', function(req,res)
@@ -273,28 +273,27 @@ app.post('/rest/User', function(req,res)
     var returnValue = userTable.length-1
     res.end(returnValue.toString());
 });
-app.get('/rest/QCMList/:qcmid', function(req,res)           // GET QCM avec QUESTIONS
+app.get('/rest/QCMList/:qcmId', function(req,res)           // GET QCM avec QUESTIONS
 {
-
     var QCM=
     {
-        id:req.params.qcmid,
-        Titre:qcm_Table[req.params.qcmid].Titre,
-        questions: _.cloneDeep(qcm_Table[req.params.qcmid].questions)
+        id:req.params.qcmId,
+        Titre:qcmTable[req.params.qcmId].Titre,
+        questions: _.cloneDeep(qcmTable[req.params.qcmId].questions)
     };
-    if(qcm_Table[req.params.qcmid].questions)
-    for(var i =0;i<qcm_Table[req.params.qcmid].questions.length;i++)
+    if(qcmTable[req.params.qcmId].questions)
+    for(var i =0;i<qcmTable[req.params.qcmId].questions.length;i++)
     {
         delete QCM.questions[i].reponses;
     }
     res.json(QCM);
 });
-app.post('/rest/QCMList/:qcmid', function(req, res)         // POST QCM avec QUESTIONS
+app.post('/rest/QCMList/:qcmId', function(req, res)         // POST QCM avec QUESTIONS
 {
-    if(qcm_Table[req.body.id]) {
-        qcm_Table[req.body.id].Titre = req.body.Titre;
+    if(qcmTable[req.body.id]) {
+        qcmTable[req.body.id].Titre = req.body.Titre;
         for (var i = 0; i < req.body.questions.length; i++) {
-            qcm_Table[req.body.id].questions[i].Titre = req.body.questions[i].Titre;
+            qcmTable[req.body.id].questions[i].Titre = req.body.questions[i].Titre;
 
         }
 
@@ -305,32 +304,32 @@ app.post('/rest/QCMList/:qcmid', function(req, res)         // POST QCM avec QUE
         res.end("QCM Inexistant");
     }
 });
-app.delete('/rest/QCMList/:qcmid', function(req, res)
+app.delete('/rest/QCMList/:qcmId', function(req, res)
 {
-    qcm_Table.splice(req.body.qcmid,1);
-    for(var i =0; i<qcm_Table.length;i++)
+    qcmTable.splice(req.body.qcmId,1);
+    for(var i =0; i<qcmTable.length;i++)
     {
-        qcm_Table[i].id = i;
+        qcmTable[i].id = i;
     }
     res.end("QCM Supprimé");
 });
-app.post('/rest/QCMList/:id_QCM/UserId/:userId/ScoreQCM', function (req, res)
+app.post('/rest/QCMList/:qcmId/UserId/:userId/ScoreQCM', function (req, res)
 {
 
-    var id_Us = req.params.userId;
+    var userId = req.params.userId;
 
-    if(userTable[id_Us] != undefined)
+    if(userTable[userId] != undefined)
     {
 
-        if(checkToken(id_Us))
+        if(checkToken(userId))
         {
             var reponseSheet=req.body.answers;
             console.log(reponseSheet);
-            var id_qcm= req.params.id_QCM;
+            var qcmId= req.params.qcmId;
             var resultatFinal=0;
-            for(var j=0; j<qcm_Table[id_qcm].questions.length; j++)
+            for(var j=0; j<qcmTable[qcmId].questions.length; j++)
             {
-                if((qcm_Table[id_qcm].questions[j].reponses[reponseSheet[j]].isTrue))
+                if((qcmTable[qcmId].questions[j].reponses[reponseSheet[j]].isTrue))
                 {
                     resultatFinal++;
                 }
@@ -344,30 +343,30 @@ app.post('/rest/QCMList/:id_QCM/UserId/:userId/ScoreQCM', function (req, res)
     }
 
 });
-app.get('/rest/QCMList/:qcmid/QuesList',function(req, res)
+app.get('/rest/QCMList/:qcmId/QuesList',function(req, res)
 {
-    res.json( qcm_Table[req.params.qcmid].questions);
+    res.json( qcmTable[req.params.qcmId].questions);
 });
-app.get('/rest/QCMList/:qcmid/QuesListComplete/:quesid', function(req, res)
+app.get('/rest/QCMList/:qcmId/QuesListComplete/:questionId', function(req, res)
 {
     var Question=
     {
-        id:req.params.quesid,
-        Titre:qcm_Table[req.params.qcmid].questions[req.params.quesid].Titre,
-        reponses:qcm_Table[req.params.qcmid].questions[req.params.quesid].reponses
+        id:req.params.questionId,
+        Titre:qcmTable[req.params.qcmId].questions[req.params.questionId].Titre,
+        reponses:qcmTable[req.params.qcmId].questions[req.params.questionId].reponses
     };
     res.json(Question);
 });
-app.get('/rest/QCMList/:qcmid/QuesList/:quesid', function(req,res)                  // GET QUESTION avec REPONSES SANS BOOLEAN
+app.get('/rest/QCMList/:qcmId/QuesList/:questionId', function(req,res)
 {
-    if(qcm_Table[req.params.qcmid].questions[req.params.quesid]) {
+    if(qcmTable[req.params.qcmId].questions[req.params.questionId]) {
         var Question =
         {
-            id: req.params.quesid,
-            Titre: qcm_Table[req.params.qcmid].questions[req.params.quesid].Titre,
-            reponses: _.cloneDeep(qcm_Table[req.params.qcmid].questions[req.params.quesid].reponses)
+            id: req.params.questionId,
+            Titre: qcmTable[req.params.qcmId].questions[req.params.questionId].Titre,
+            reponses: _.cloneDeep(qcmTable[req.params.qcmId].questions[req.params.questionId].reponses)
         };
-        for (var i = 0; i < qcm_Table[req.params.qcmid].questions[req.params.quesid].reponses.length; i++) {
+        for (var i = 0; i < qcmTable[req.params.qcmId].questions[req.params.questionId].reponses.length; i++) {
             delete(Question.reponses[i].isTrue);
         }
         res.json(Question);
@@ -378,32 +377,32 @@ app.get('/rest/QCMList/:qcmid/QuesList/:quesid', function(req,res)              
     }
 
 });
-app.post('/rest/QCMList/:qcmid/QuesList/:quesid', function(req,res)
+app.post('/rest/QCMList/:qcmId/QuesList/:questionId', function(req,res)
 {
-    qcm_Table[req.params.qcmid].questions[req.params.quesid].Titre=req.body.Titre;
-    qcm_Table[req.params.qcmid].questions[req.params.quesid].reponses=req.body.reponses;
+    qcmTable[req.params.qcmId].questions[req.params.questionId].Titre=req.body.Titre;
+    qcmTable[req.params.qcmId].questions[req.params.questionId].reponses=req.body.reponses;
     res.end("Question Mise a jour");
 });
-app.delete('/rest/QCMList/:qcmid/QuesList/:quesid',function(req,res)
+app.delete('/rest/QCMList/:qcmId/QuesList/:questionId',function(req,res)
 {
-    qcm_Table[req.params.qcmid].questions.splice(req.params.quesid, 1);
-    for(var i =0; i<qcm_Table[req.params.qcmid].questions.length;i++)
+    qcmTable[req.params.qcmId].questions.splice(req.params.questionId, 1);
+    for(var i =0; i<qcmTable[req.params.qcmId].questions.length;i++)
     {
-        qcm_Table[req.params.qcmid].questions[i].id = i;
+        qcmTable[req.params.qcmId].questions[i].id = i;
     }
     res.end("Question Supprimée");
 
 });
-app.post('/rest/QCMList/:qcmid/QuesList', function(req,res)
+app.post('/rest/QCMList/:qcmId/QuesList', function(req,res)
 {
 
-    if(qcm_Table[req.params.qcmid].questions)
-    var newId=qcm_Table[req.params.qcmid].questions.length;
+    if(qcmTable[req.params.qcmId].questions)
+    var newId=qcmTable[req.params.qcmId].questions.length;
     else {
         var newId = 0;
-        qcm_Table[req.params.qcmid].questions=[];
+        qcmTable[req.params.qcmId].questions=[];
     }
-    qcm_Table[req.params.qcmid].questions[newId]={id:newId,Titre: req.body.Titre, reponses:req.body.reponses};
+    qcmTable[req.params.qcmId].questions[newId]={id:newId,Titre: req.body.Titre, reponses:req.body.reponses};
     res.end("Question Cree");
 });
 app.post('/rest/answer', function(req, res)

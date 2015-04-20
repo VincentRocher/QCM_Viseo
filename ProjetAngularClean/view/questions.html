@@ -1,22 +1,20 @@
-<div ng-controller="questionControleur as QuesCtrl">
-    <div ng-repeat="question in QuesCtrl.qcm_Courant.questions" ng-if="question.id == QuesCtrl.QIndex">
+<div ng-controller="questionController as QuesCtrl">
+    <div ng-repeat="question in QuesCtrl.actualQcm.questions" ng-if="question.id == QuesCtrl.QIndex">
         <p>Question : {{question.Titre}}
             <!-- Affichage des reponses. Affichage different si le QCM a été fait ou pas. -->
-        <li ng-repeat="reponse in QuesCtrl.question_Courante.reponses" ng-if="!QuesCtrl.qcm[QuesCtrl.qcm_Courant.id]">
+        <li ng-repeat="reponse in QuesCtrl.actualQuestion.reponses" ng-if="!QuesCtrl.qcm[QuesCtrl.actualQcm.id]">
             <input type="radio"
                    ng-model="QuesCtrl.radio[reponse.id]"
                    ng-value="true"
-                   ng-click="QuesCtrl.nextQ(reponse.id, QuesCtrl.qcm[QuesCtrl.qcm_Courant.id])"
-                   name="{{'Normal'+'qcm'+QuesCtrl.qcm_Courant.id+'ques'+QuesCtrl.question_Courante.id}}"
+                   ng-click="QuesCtrl.nextQ(reponse.id, QuesCtrl.qcm[QuesCtrl.actualQcm.id])"
+                   name="{{'Normal'+'qcm'+QuesCtrl.actualQcm.id+'ques'+QuesCtrl.actualQuestion.id}}"
                     />
             <span>{{reponse.Titre}}</span>
         </li>
-        <li ng-repeat="reponse in QuesCtrl.question_Courante.reponses" ng-if="QuesCtrl.qcm[QuesCtrl.qcm_Courant.id].cleared" ng-click="QuesCtrl.nextQ(reponse.id, true)">
+        <li ng-repeat="reponse in QuesCtrl.actualQuestion.reponses" ng-if="QuesCtrl.qcm[QuesCtrl.actualQcm.id].cleared" ng-click="QuesCtrl.nextQ(reponse.id, true)">
 >>>
 
-                    <span ng-class="QuesCtrl.qcm.styleReponse[QuesCtrl.question_Courante.id].reponses[reponse.id]">
-                        <span ng-class="qcm_Table[QuesCtrl.qcm_Courant.id].questions[QuesCtrl.question_Courante.id].reponses[reponse.id]">{{reponse.Titre}}</span>
-                    </span>
+                        <span ng-class="QuesCtrl.styleAnswer[reponse.id]">{{reponse.Titre}}</span>
 
 
         </li>
@@ -24,7 +22,7 @@
         </p>
 
         <button ng-click="QuesCtrl.moveQ(-1)" ng-hide="question.id==0">last</button>
-        <button ng-click="QuesCtrl.moveQ(1)" ng-hide="question.id==QuesCtrl.qcm_Courant.questions.length-1">next</button>
+        <button ng-click="QuesCtrl.moveQ(1)" ng-hide="question.id==QuesCtrl.actualQcm.questions.length-1">next</button>
 
     </div>
 </div>

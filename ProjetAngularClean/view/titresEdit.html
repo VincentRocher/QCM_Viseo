@@ -1,0 +1,13 @@
+
+
+<div ng-controller="titlesEditController as titleEditCtrl">
+    <div ng-repeat="qcm in qcmTable">
+        <input type="text"  name ="{{'qcm'+titleEditCtrl.actualQcm.id}}" placeholder="{{qcm.Titre}}" ng-click="titleEditCtrl.select(qcm)" ng-model="titleEditCtrl.qcmEdit[qcm.id].Titre"   value ="{{qcm.Titre}}"/>
+        <button ng-disabled="titleEditCtrl.editedQcm != qcm.id" ng-click="titleEditCtrl.save(qcm.id,'qcm')" class="edit">Sauvegarder</button>
+        <button ng-disabled="titleEditCtrl.editedQcm != qcm.id" ng-click="titleEditCtrl.cancel(qcm.id)" class="edit">Annuler</button>
+        <button ng-disabled="titleEditCtrl.editedQcm != qcm.id || titleEditCtrl.qcmEdit[qcm.id].Titre.length >0" ng-click="titleEditCtrl.goToQcm(qcm.id)" class="edit">Editer QCM</button>
+        <button ng-disabled="titleEditCtrl.editedQcm != qcm.id || titleEditCtrl.qcmEdit[qcm.id].Titre.length >0" ng-click="titleEditCtrl.delete(qcm.id,'qcm')" class="delete">Supprimer QCM</button>
+    </div>
+    <input type="text" ng-model="titleEditCtrl.createQcmInput" name="createQcmInput "value="Creer QCM"/><button ng-disabled="titleEditCtrl.editedQcm >=0" ng-click="titleEditCtrl.new()" class="create">Creer QCM</button>
+
+</div>

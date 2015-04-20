@@ -20,25 +20,21 @@ a{
 {
     color:red ;
 }
-.globalForm
+.create
 {
-    width:200px;
-    height:200px;
-    padding:5px;
-    background-color:lightgrey;
-    border:2px solid grey;
-    position:fixed;
-    top:0px;
-    left:200px;
-
-}
-.create{
     background-color:forestgreen;
 
 }
-.delete{
+.delete
+{
     background-color:red;
 }
-.edit{
+.edit
+{
     background-color:yellow;
+}
+.inscriptionLogs span
+{
+    width:200px;
+    display:block;
 }

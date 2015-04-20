@@ -12,14 +12,14 @@ angular.module('QCM',['ngResource','ngRoute'])
         };
     })
     .factory('QcmFactory',['$resource',function($resource){
-        return $resource('/rest/QCMList/:qcmid',
-            {qcmid:"@qcmid"}
+        return $resource('/rest/QCMList/:qcmId',
+            {qcmId:"@qcmId"}
         );
 
     }])
     .factory('QuesFactory', ['$resource', function($resource){
-        return $resource('/rest/QCMList/:qcmid/QuesList/:quesid',
-            {qcmid:"@qcmid", quesid:"@quesid"}
+        return $resource('/rest/QCMList/:qcmId/QuesList/:questionId',
+            {qcmId:"@qcmId", questionId:"@questionId"}
         );
 
     }])
@@ -27,338 +27,136 @@ angular.module('QCM',['ngResource','ngRoute'])
         $routeProvider
             .when('/index',{
                 templateUrl:'./view/titres.html',
-                controller:'titresController as titreCtrl',
+                controller:'titlesController as titreCtrl',
                 resolve: {
                     loadedQcmList: ['$http','sharedData', function($http, sharedData){
                         return $http.get("./rest/QCMList").then(function(response){
-                            sharedData.store('qcm_Table',response.data);
-                            return sharedData.get('qcm_Table');
+                            sharedData.store('qcmTable',response.data);
+                            return sharedData.get('qcmTable');
 
                         })
                     } ]
                     }
             })
-            .when('/qcm/:qcmid/numq/:quesid',{
+            .when('/qcm/:qcmId/numq/:questionId',{
                 templateUrl:'./view/questions.html',
-                controller:'questionControleur as QuesCtrl',
+                controller:'questionController as QuesCtrl',
                 resolve: {
                     loadedQues: ['$http','sharedData','$route', function($http, sharedData, $route){
-                        return $http.get("./rest/QCMList/"+$route.current.params.qcmid+"/QuesList/"+$route.current.params.quesid).then(function(response){
-                            var question_Courante = response.data;
-                            sharedData.store('question_Courante',question_Courante);
-                            return sharedData.get('question_Courante');
+                        return $http.get("./rest/QCMList/"+$route.current.params.qcmId+"/QuesList/"+$route.current.params.questionId).then(function(response){
+                            var actualQuestion = response.data;
+                            sharedData.store('actualQuestion',actualQuestion);
+                            return sharedData.get('actualQuestion');
 
                         })
                     } ]
                 }
 
             })
-            .when('/inscription/:qcmid',{
+            .when('/inscription/:qcmId',{
                 templateUrl:'./view/inscription.html',
-                controller:'inscriptionControleur as InsCtrl',
+                controller:'inscriptionController as InsCtrl',
                 resolve: {
                     loadedQcm: ['$http','sharedData','$route', function($http, sharedData, $route){
 
-                        return $http.get("./rest/QCMList/"+$route.current.params.qcmid).then(function(response){
-                            var qcm_Courant = response.data;
-                            sharedData.store('qcm_Courant',qcm_Courant);
-                            return sharedData.get('qcm_Courant');
+                        return $http.get("./rest/QCMList/"+$route.current.params.qcmId).then(function(response){
+                            var actualQcm = response.data;
+                            sharedData.store('actualQcm',actualQcm);
+                            return sharedData.get('actualQcm');
 
                         })
                     } ]
                 }
 
             })
-            .when('/qcm/:qcmid/score',
-            {
+            .when('/qcm/:qcmId/score',{
                 templateUrl:'./view/scores.html',
-                controller:'scoreControleur as scoreCtrl'
+                controller:'scoreController as scoreCtrl'
 
+            })
+            .when('/login',{
+                templateUrl:'./view/login.html',
+                controller:'loginController as logCtrl'
+
+            })
+            .when('/edit/index',{
+                templateUrl:'./view/titresEdit.html',
+                controller:'titlesEditController as titleEditCtrl',
+                resolve: {
+                    loadedQcmList: ['$http','sharedData', function($http, sharedData){
+                        return $http.get("./rest/QCMList").then(function(response){
+                            sharedData.store('qcmTable',response.data);
+                            return sharedData.get('qcmTable');
+
+                        })
+                    } ]
+                }
+            })
+            .when('/edit/qcm/:qcmId',{
+                templateUrl:'./view/questionsEdit.html',
+                controller: 'questionsEditController as questionEditCtrl',
+                resolve: {
+                    loadedQcm: ['$http','sharedData','$route', function($http, sharedData, $route){
+
+                        return $http.get("./rest/QCMList/"+$route.current.params.qcmId).then(function(response){
+                            var actualQcm = response.data;
+                            sharedData.store('actualQcm',actualQcm);
+                            return sharedData.get('actualQcm');
+
+                        })
+                    } ]
+                }
+            })
+            .when('/edit/qcm/:qcmId/question/:questionId',{
+                templateUrl : './view/answersEdit.html',
+                controller : "answersEditController as answerEditCtrl",
+                resolve: {
+                    loadedQues: ['$http','sharedData','$route', function($http, sharedData, $route){
+                        return $http.get("./rest/QCMList/"+$route.current.params.qcmId+"/QuesListComplete/"+$route.current.params.questionId).then(function(response){
+                            var actualQuestion = response.data;
+                            sharedData.store('actualQuestion',actualQuestion);
+                            return sharedData.get('actualQuestion');
+
+                        })
+                    } ]
+                }
             })
             .otherwise({redirectTo:'/index'});
     }])
-    .controller('indexControleur',    ['$scope',  '$http','QcmFactory','QuesFactory','sharedData', function($scope, $http, QcmFactory, QuesFactory,sharedData )
+    .controller('inscriptionController',['$scope',  '$http','$routeParams','$location','sharedData', function($scope, $http, $routeParams, $location, sharedData)
     {
-
         var self = this;
-        self.qcm_Internal_Input=false;                  //edition
-        self.ques_Internal_Input=false;                 //edition
-        self.type_Edit="";                              //edition
-        self.qcm_Edit=[];                               //edition
-        self.ques_Edit=[];                              //edition
-        self.rep_Edit=[];                               //edition
-        self.repDel=[];                                 //edition
-        self.select = function(qcm)                                             // Edition------------------------------
+        self.selection = sharedData.get('selection');
+        self.qcmIdToGo = $routeParams.qcmId;
+        self.cancel = function(){
+            $location.path("/index");
+        }
+        self.inscription = function()                                           // inscription
         {
-            $http.get("./rest/QCMList/"+qcm.id).then(
-                function(responseQCM) {
-                    self.qcm_Courant=responseQCM.data
-                    self.qcm_Input=true;
-                    self.qcm_Internal_Input=false;
-                    self.type_Edit="qcm";
-                    delete(self.question_Courante);
-                    delete(self.reponse_Courante);
-                },
-                function(errResponseQCM)
+            $http.post("./rest/User", self.utilisateurIns).then(
+                function(responseIns)
                 {
-                }
-            );
-
-        };
-        self.selectQ = function(question)                                       // Edition------------------------------
-        {
-            $http.get("./rest/QCMList/"+self.qcm_Courant.id+"/QuesList/"+question.id).then(
-                function(responseQues) {
-                        self.question_Courante = responseQues.data; // QUES_ID/QUES_TITRE/REPONSES sans ISTRUE
-                        $http.get("/rest/QCMList/" + self.qcm_Courant.id + "/QuesListComplete/" + question.id ).then(
-                            function (responseTrue) {
-                                for (var i = 0; i < responseTrue.data.reponses.length; i++) {
-                                    if (responseTrue.data.reponses[i].isTrue)
-
-                                        self.question_Courante.reponses[i].isTrue = true;
-
-                                    else
-                                        self.question_Courante.reponses[i].isTrue = false;
-
-                                }
-                                if(self.qcm[self.qcm_Courant.id]) {
-                                    self.qcm.styleReponse = self.selection[self.qcm_Courant.id].questions;
-                                }
-                                self.type_Edit="question";
-                                self.ques_Input = true;
-                                self.ques_Internal_Input = false;
-
-
-                            },
-                            function (errResponseTrue) {
-
-                            }
-                        );
-
+                    self.connectedUserId=responseIns.data;
+                    sharedData.store('userId', self.connectedUserId);
+                    sharedData.store('RepQuest', []);
+                    if(!self.selection)
+                        sharedData.store('selection', []);
+                    sharedData.store('radio', []);
+                    $location.path("/qcm/"+self.qcmIdToGo+"/numq/0");
 
                 },
-                function(errResponseQues)
-                {
-                    console.log(errResponse.data);
-                    console.error("error while fetching notes");
-                }
+                function(errResponseIns)
+                {}
+
 
             );
-
         };
-        self.selectR= function(reponse)                                         // Edition------------------------------
-        {
-            self.reponse_Courante=reponse;
-            self.type_Edit="reponse";
-            self.rep_Input = true;
-
-        };
-        self.nouveau = function(item)                                           // Edition------------------------------
-        {
-            switch(item){
-                case "qcm":
-                    self.newQCM = new QcmFactory();
-                    if(self.create_Qcm_Input)
-                        self.newQCM.Titre = self.create_Qcm_Input;
-                    else
-                        self.newQCM.Titre = "";
-                    self.newQCM.questions=["k"];
-                    self.newQCM.$save();
-                    self.refreshQcmList();
-                    break;
-                case "question":
-                    self.newQues = new QuesFactory();
-                    self.newQues.Titre = self.create_Question_Input;
-                    self.newQues.reponses = [];
-                    self.newQues.$save({qcmid:self.qcm_Courant.id});
-                    self.refreshQcmCourant(self.qcm_Courant.id);
-                    break;
-                case "reponse":
-                    self.question_Courante.reponses[self.question_Courante.reponses.length]=
-                    {  id:self.question_Courante.reponses.length,
-                        Titre:self.create_Reponse_Input,
-                        isTrue:false
-                    }
-
-                    break;
-                default:
-                    break;
-            }
-        };
-        self.supprimer = function(id, item)                                     // Edition------------------------------
-        {
-
-            switch(item){
-                case "qcm":
-                    if(self.qcm_Courant.id==id)
-                    {
-                        delete(self.qcm_Courant);
-                    }
-                    (QcmFactory.delete({qcmid:id}));
-                    self.refreshQcmList();
-                    self.qcm_Input=false;
-
-                    break;
-                case "question":
-
-                    if(self.question_Courante.id==id)
-                    {
-                        delete(self.question_Courante);
-                    }
-                    QuesFactory.delete({qcmid:self.qcm_Courant.id,quesid:id});
-                    self.refreshQcmCourant(self.qcm_Courant.id);
-                    self.ques_Input=false;
-                    break;
-                default:
-                    break;
-            }
-
-        };
-        self.save=function( id, type)                                           // Edition------------------------------
-        {
-            switch(type)
-            {
-                case "qcm":
-
-                    QcmFactory.get({qcmid: id})
-                        .$promise.then(function (qcm) {
 
 
-                            qcm.Titre = self.qcm_Edit[id].Titre;
 
-                            qcm.$save({qcmid: id});
-                            self.qcm_Edit[self.qcm_Courant.id].Titre="";
-                            self.qcm_Input=false;
-                            self.qcm_Internal_Input=false;
-                            self.refreshQcmList();
-                        }
-                    );
-
-
-                    break;
-
-                case "question" :
-                    var saveLength= self.question_Courante.reponses.length;
-                    var recul = 0;
-                    for(var i =0; i<saveLength;i++)
-                    {
-                        if(self.repDel[i]==true)
-                        {
-                            self.question_Courante.reponses.splice(i-recul,1);
-                            recul++;
-                            delete(self.repDel[i]);
-                        }
-                    }
-                    for(var j =0; j<self.question_Courante.reponses.length;j++)
-                    {
-                        self.question_Courante.reponses[j].id= j;
-                    }
-                    QuesFactory.get({qcmid:1,quesid:0})
-                        .$promise.then(function(ques){
-                            if(self.ques_Edit[id]==undefined)
-                            {
-                                ques.reponses=self.question_Courante.reponses;
-                                for(var i =0; i<self.question_Courante.reponses.length;i++)
-                                {
-                                    if(self.rep_Edit[i]) {
-                                        ques.reponses[i].Titre = self.rep_Edit[i].Titre;
-                                        self.rep_Edit[i].Titre = "";
-                                    }
-                                }
-                                ques.$save({qcmid:self.qcm_Courant.id,quesid:self.question_Courante.id});
-                                self.refreshQuestionCourante(self.qcm_Courant.id, self.question_Courante.id, "edit");
-                            }
-                            else
-                            {
-                                ques.Titre=self.ques_Edit[id].Titre;
-                                ques.$save({qcmid:self.qcm_Courant.id,quesid:self.question_Courante.id});
-                                self.ques_Edit[self.question_Courante.id]={Titre:""};
-                                self.ques_Input=false;
-                                self.ques_Internal_Input=false;
-                                self.refreshQcmCourant(self.qcm_Courant.id);
-                            }
-                        });
-                    break;
-                default:
-                    break;
-            }
-        };
-        self.securiteEdition = function()                                       // Edition------------------------------
-        {
-
-            if(self.user.login=="admin" && self.user.pwd=="VISEO")
-            {
-                self.modeEdition=true;
-                self.modeEditionSecurite = false;
-
-            }
-
-        };
-        self.InternalEdit=function(type, item)                                  // Edition------------------------------
-        {
-            switch(type)
-            {
-
-                case 'qcm':
-                    self.refreshQcmCourant(item.id);
-                    self.qcm_Internal_Input=true;
-                    break;
-                case 'question':
-                    self.refreshQuestionCourante(self.qcm_Courant.id,item.id, "edit");
-                    self.ques_Internal_Input=true;
-                    break;
-                case 'reponse':
-                    self.rep_Internal_Input=true;
-                    break;
-                default:
-                    break;
-            }
-
-
-        };
-        self.uncheckOther = function(reponse)                                   // Edition------------------------------
-        {
-
-            for(var i = 0;i<self.question_Courante.reponses.length;i++)
-            {
-                if(self.question_Courante.reponses[i].id!=reponse.id)
-                {
-
-                    self.question_Courante.reponses[i].isTrue=false;
-                }
-
-            }
-
-
-        };
-        self.selectN = function()                                               // Edition------------------------------
-        {
-            self.type_Edit="New";
-        };
-        self.cancel = function(window)                                          // Edition------------------------------
-        {
-            switch(window) {
-                case "Edit_QCM":
-                    if( self.qcm_Edit[self.qcm_Courant.id])
-                        self.qcm_Edit[self.qcm_Courant.id].Titre="";
-                    self.qcm_Internal_Input=false;
-                    self.qcm_Input=false;
-                    break;
-                case "Edit_Ques":
-                    if( self.ques_Edit[self.question_Courante.id])
-                        self.ques_Edit[self.question_Courante.id].Titre="";
-                    self.ques_Internal_Input=false;
-                    self.ques_Input=false;
-                    break;
-
-                default:
-                    break;
-
-            }
-        };
     }
     ])
-    .controller('titresController',['$scope','$http','$routeParams','sharedData','$location',
+    .controller('titlesController',['$scope','$http','$routeParams','sharedData','$location',
         function($scope, $http,$routeParams,sharedData, $location )
         {
             var self=this;
@@ -380,201 +178,137 @@ angular.module('QCM',['ngResource','ngRoute'])
 
                 }
              }
-
-            $scope.qcm_Table=sharedData.get('qcm_Table');
+            $scope.qcmTable=sharedData.get('qcmTable');
             self.qcm=sharedData.get('qcm');
-            for(var i = 0; i<$scope.qcm_Table.length;i++){
+            for(var i = 0; i<$scope.qcmTable.length;i++){
                 if(self.qcm!=undefined && self.qcm[i]!=undefined && self.qcm[i].cleared == true)
-
                 {
-                    $scope.qcm_Table[i].finish=true;
+                    $scope.qcmTable[i].finish=true;
                 }
             }
 
         }])
-    .controller('inscriptionControleur',['$scope',  '$http','QcmFactory','QuesFactory','$routeParams','$location','sharedData', function($scope, $http, QcmFactory, QuesFactory, $routeParams, $location, sharedData)
-        {
-            var self = this;
-            self.selection = sharedData.get('selection');
-            self.qcmIdToGo = $routeParams.qcmid;
-            self.cancel = function(){
-                $location.path("/index");
-            }
-            self.inscription = function()                                           // inscription
-            {
-                $http.post("./rest/User", self.utilisateurIns).then(
-                    function(responseIns)
-                    {
-                        self.connectedUserId=responseIns.data;
-                        sharedData.store('userId', self.connectedUserId);
-                        sharedData.store('RepQuest', []);
-                        if(!self.selection)
-                        sharedData.store('selection', []);
-                        sharedData.store('radio', []);
-                        $location.path("/qcm/"+self.qcmIdToGo+"/numq/0");
-
-                    },
-                    function(errResponseIns)
-                    {}
-
-
-                );
-            };
-
-
-
-        }
-    ])
-    .controller('questionControleur',['$scope','$http','QcmFactory','QuesFactory','$routeParams','sharedData','$location',  function($scope, $http, QcmFactory, QuesFactory,$routeParams,sharedData, $location )
+    .controller('questionController',['$scope','$http','$routeParams','sharedData','$location',  function($scope, $http,$routeParams,sharedData, $location )
     {
         var self=this;
-
-        $scope.qcm_Table=sharedData.get('qcm_table');
-        self.affScore=false;
-        self.QIndex = $routeParams.quesid;
-        self.qcm_Courant = sharedData.get('qcm_Courant');
+        $scope.qcmTable=sharedData.get('qcmTable');
+        self.styleAnswer=[];
+        self.QIndex = $routeParams.questionId;
+        self.actualQcm = sharedData.get('actualQcm');
         self.RepQuest=sharedData.get('RepQuest');
         self.qcm=sharedData.get('qcm');
         self.selection = sharedData.get('selection');
         self.radio = sharedData.get('radio');
-        self.nextQ = function(id_Rep, isReplay)                                 //questions
+        self.nextQ = function(idAns, isReplay)                                 //questions
         {
-            if(!self.qcm || !self.qcm[self.qcm_Courant.id]) {
-                if(!self.question_Courante.Repondu) {
-                    if (self.question_Courante.reponses[id_Rep]) {
-                        self.RepQuest[self.question_Courante.id]=id_Rep;
+            if(!self.qcm || !self.qcm[self.actualQcm.id]) {
+                if(!self.actualQuestion.Repondu) {
+                    if (self.actualQuestion.reponses[idAns]) {
+                        self.RepQuest[self.actualQuestion.id]=idAns;
                         sharedData.store('RepQuest', self.RepQuest);
                         var nbRep = 0;
-                        for(var i = 0; i<self.qcm_Courant.questions.length;i++)
+                        for(var i = 0; i<self.actualQcm.questions.length;i++)
                         {
                             if(self.RepQuest[i] != undefined)
                                 nbRep++;
                         }
-                        if(nbRep==self.qcm_Courant.questions.length) {
+                        if(nbRep==self.actualQcm.questions.length) {
                             self.qcmComplete = true;
                         }
                     }
-                    if(self.selection[self.qcm_Courant.id] == undefined)
+                    if(self.selection[self.actualQcm.id] == undefined)
                     {
-                        self.selection[self.qcm_Courant.id] = {};
+                        self.selection[self.actualQcm.id] = {};
                     }
-                    if(self.selection[self.qcm_Courant.id].questions == undefined)
+                    if(self.selection[self.actualQcm.id].questions == undefined)
                     {
-                        self.selection[self.qcm_Courant.id].questions = [];
+                        self.selection[self.actualQcm.id].questions = [];
                     }
-                    if(self.selection[self.qcm_Courant.id].questions[self.question_Courante.id] == undefined)
+                    if(self.selection[self.actualQcm.id].questions[self.actualQuestion.id] == undefined)
                     {
-                        self.selection[self.qcm_Courant.id].questions[self.question_Courante.id]={};
+                        self.selection[self.actualQcm.id].questions[self.actualQuestion.id]={};
                     }
-                    for(var i = 0;i<self.question_Courante.reponses.length;i++)
+                    for(var i = 0;i<self.actualQuestion.reponses.length;i++)
                     {
-                        if(i==id_Rep)
+                        if(i==idAns)
                         {
-                            if(self.selection[self.qcm_Courant.id].questions[self.question_Courante.id].reponses == undefined)
-                                self.selection[self.qcm_Courant.id].questions[self.question_Courante.id].reponses=[];
-                            self.selection[self.qcm_Courant.id].questions[self.question_Courante.id].reponses[i]={selected:true};
+                            if(self.selection[self.actualQcm.id].questions[self.actualQuestion.id].reponses == undefined)
+                                self.selection[self.actualQcm.id].questions[self.actualQuestion.id].reponses=[];
+                            self.selection[self.actualQcm.id].questions[self.actualQuestion.id].reponses[i]={selected:true};
 
                         }
                         else
                         {
-                            if(self.selection[self.qcm_Courant.id].questions[self.question_Courante.id].reponses == undefined)
-                                self.selection[self.qcm_Courant.id].questions[self.question_Courante.id].reponses=[];
-                            self.selection[self.qcm_Courant.id].questions[self.question_Courante.id].reponses[i]={selected:false};
+                            if(self.selection[self.actualQcm.id].questions[self.actualQuestion.id].reponses == undefined)
+                                self.selection[self.actualQcm.id].questions[self.actualQuestion.id].reponses=[];
+                            self.selection[self.actualQcm.id].questions[self.actualQuestion.id].reponses[i]={selected:false};
                         }
                     }
                     sharedData.store('selection', self.selection);
-                    self.question_Courante.Repondu=true;
+                    self.actualQuestion.Repondu=true;
                 }
             }
             if(self.qcmComplete)
             {
                 if(self.qcm==undefined)
                 self.qcm = [];
-                self.qcm[self.qcm_Courant.id]={cleared:true};
+                self.qcm[self.actualQcm.id]={cleared:true};
                 sharedData.store('qcm', self.qcm);
-                sharedData.store('question_Courante', []);
+                sharedData.store('actualQuestion', []);
                 self.qcmComplete=false;
-                $location.path("/qcm/"+self.qcm_Courant.id+"/score");
+                $location.path("/qcm/"+self.actualQcm.id+"/score");
             }
             else {
-                if (self.QIndex < self.qcm_Courant.questions.length - 1)
-                    $location.path("/qcm/" + self.qcm_Courant.id + "/numq/" + (parseInt(self.QIndex) + 1));
+                if (self.QIndex < self.actualQcm.questions.length - 1)
+                    $location.path("/qcm/" + self.actualQcm.id + "/numq/" + (parseInt(self.QIndex) + 1));
             }
         };
         self.moveQ = function(direction)                                        //questions
         {
-            $location.path("/qcm/"+self.qcm_Courant.id+"/numq/"+(parseInt(self.QIndex)+parseInt(direction)));
-        };
-        self.refreshQuestionCourante = function(qcmid, quesid, mode)            // reponses$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-        {
-            $http.get("./rest/QCMList/"+self.qcm_Courant.id+"/QuesList/"+self.QIndex).then(
-                function(responseQues){
-
-                    self.question_Courante=responseQues.data; // QUES_ID/QUES_TITRE/REPONSES sans ISTRUE
-
-                    if(mode=="normal") {
-                        for (var i = 0; i < self.question_Courante.reponses.length; i++) {
-                            if (self.RepQuest[self.question_Courante.id] == i && self.radio[i] != undefined)
-                                self.radio[i] = true;
-                            else
-                                self.radio[i] = false;
-                        }
-                        if (self.qcm!= undefined && self.qcm[self.qcm_Courant.id]) {
-                            self.qcm.styleReponse = self.selection[self.qcm_Courant.id].questions;
-                        }
-                        sharedData.store('question_Courante', self.question_Courante)
-                    }
-                    else
-                    {
-                        $http.get("/rest/QCMList/"+self.qcm_Courant.id+"/QuesListComplete/"+self.question_Courante.id).then(
-                            function(responseTrue){
-                                for(var i = 0; i<responseTrue.data.reponses.length; i++)
-                                {
-                                    if(responseTrue.data.reponses[i].isTrue)
-                                        self.question_Courante.reponses[i].isTrue = true;
-                                    else
-                                        self.question_Courante.reponses[i].isTrue = false;
-                                }
-                            },
-                            function(errResponseTrue)
-                            {
-                            }
-                        );
-                    }
-                },
-                function(errResponseQues)
-                {
-
-                    console.log(errResponseQues.data);
-                    console.error("error while fetching notes");
-                }
-
-            );
+            $location.path("/qcm/"+self.actualQcm.id+"/numq/"+(parseInt(self.QIndex)+parseInt(direction)));
         };
 
-        self.qcm_Courant = sharedData.get("qcm_Courant");
-        if(!self.qcm_Courant)
+        self.actualQcm = sharedData.get("actualQcm");
+
+        if(!self.actualQcm)
         {
             $location.path("/index");
         }
         else
         {
-            self.question_Courante = sharedData.get("question_Courante");
+            self.actualQuestion = sharedData.get("actualQuestion");
             self.selection = sharedData.get('selection');
-            if (self.question_Courante) {
-                for (var i = 0; i < self.question_Courante.reponses.length; i++) {
-                    if (self.RepQuest[self.question_Courante.id] == i && self.radio[i] != undefined)
-                        self.radio[i] = true;
-                    else
-                        self.radio[i] = false;
-                }
-                if (self.qcm != undefined && self.qcm[self.qcm_Courant.id]) {
-                    self.qcm.styleReponse = self.selection[self.qcm_Courant.id].questions;
-                }
+            if (self.qcm != undefined && self.qcm[self.actualQcm.id]) {
+                $http.get("./rest/QCMList/" + self.actualQcm.id+ "/QuesListComplete/" + self.actualQuestion.id).then(
+                    function(response)
+                    {
+
+                        self.styleAnswer[self.RepQuest[self.actualQuestion.id]]={selected: true};
+                        for(var i =0;i<self.actualQuestion.reponses.length;i++){
+                            if(response.data.reponses[i].isTrue)
+                                self.styleAnswer[i]={isTrue:true};
+                        }
+                    }
+                    ,
+                    function(errResponse)
+                    {
+
+                    }
+                );
             }
-            else
-            {
-                $location.path("/index");
+            else {
+                if (self.actualQuestion) {
+                    for (var i = 0; i < self.actualQuestion.reponses.length; i++) {
+                        if (self.RepQuest[self.actualQuestion.id] == i && self.radio[i] != undefined)
+                            self.radio[i] = true;
+                        else
+                            self.radio[i] = false;
+                    }
+
+                }
+                else {
+                    $location.path("/index");
+                }
             }
         }
 
@@ -582,17 +316,16 @@ angular.module('QCM',['ngResource','ngRoute'])
 
 
     }])
-    .controller('scoreControleur',['$scope','$http','QcmFactory','QuesFactory','$routeParams','sharedData','$location',  function($scope, $http, QcmFactory, QuesFactory,$routeParams,sharedData, $location, loaded ) {
+    .controller('scoreController',['$scope','$http','$routeParams','sharedData','$location',  function($scope, $http,$routeParams,sharedData, $location, loaded ) {
         if(sharedData.get('userId')== undefined)
             $location.path("/index");
         var self = this;
         /* resultats */
         self.RepQuest=sharedData.get('RepQuest');
-        self.re_get = '';
         self.connectedUserId=sharedData.get('userId');
 
 
-        $http.post("./rest/QCMList/" + $routeParams.qcmid+ "/UserId/" + self.connectedUserId + "/ScoreQCM", {'answers':self.RepQuest}).then(
+        $http.post("./rest/QCMList/" + $routeParams.qcmId+ "/UserId/" + self.connectedUserId + "/ScoreQCM", {'answers':self.RepQuest}).then(
             function (response) {
                 self.score = response.data;
             },
@@ -602,4 +335,218 @@ angular.module('QCM',['ngResource','ngRoute'])
             })
     }
 
-    ]);
+    ])
+    .controller('loginController',['$scope','$http','$routeParams','sharedData','$location',  function($scope, $http,$routeParams,sharedData, $location, loaded ) {
+        var self=this;
+        self.checkLogs = function()
+        {
+
+            if(self.user.login=="admin" && self.user.pwd=="VISEO")
+            {
+                $location.path("/edit/index");
+            }
+            else
+            {
+                $location.path("/index");
+            }
+
+        }
+    }])
+    .controller('titlesEditController', ['$scope','$http','QcmFactory','$routeParams','sharedData','$location','$route',  function($scope, $http,QcmFactory,$routeParams,sharedData, $location,$route, loaded  ) {
+        var self = this;
+        $scope.qcmTable=sharedData.get('qcmTable');
+        sharedData.store('qcmTable', $scope.qcmTable);
+        self.new = function()                                           // Edition------------------------------
+        {
+            self.newQCM = new QcmFactory();
+            if(self.createQcmInput)
+                self.newQCM.Titre = self.createQcmInput;
+            else
+                self.newQCM.Titre = "";
+            self.newQCM.questions=["k"];
+            self.newQCM.$save();
+            delete(self.editedQcm);
+            $route.reload();
+
+        };
+        self.delete = function(id, item)                                     // Edition------------------------------
+        {
+            if(self.actualQcm && self.actualQcm.id==id)
+            {
+                delete(self.actualQcm);
+            }
+            QcmFactory.delete({qcmId:id});
+            self.qcmInput=false;
+            delete(self.editedQcm);
+            $route.reload();
+
+        };
+        self.save=function( id, type)                                           // Edition------------------------------
+        {
+            QcmFactory.get({qcmId: id})
+                .$promise.then(function (qcm) {
+                    if(self.qcmEdit && self.qcmEdit[id]) {
+                        qcm.Titre = self.qcmEdit[id].Titre;
+                        qcm.$save({qcmId: id});
+                        self.qcmEdit[id].Titre = "";
+                    }
+                    delete(self.editedQcm);
+                    $route.reload();
+                }
+            );
+        };
+        self.select = function(qcm)                                             // Edition------------------------------
+        {
+            self.editedQcm = qcm.id;
+
+        };
+        self.cancel= function(id)
+        {
+            self.qcmEdit[id].Titre="";
+            delete(self.editedQcm);
+
+
+        }
+        self.goToQcm = function(id)
+        {
+            $location.path("/edit/qcm/"+id);
+
+        }
+
+    }])
+    .controller('questionsEditController',['$scope','$http','QuesFactory','$routeParams','sharedData','$location','$route',  function($scope, $http,QuesFactory,$routeParams,sharedData, $location,$route, loadedQues  ) {
+    var self = this;
+        $scope.qcmTable=sharedData.get('qcmTable');
+        self.actualQcm = sharedData.get('actualQcm');
+
+        self.back= function(){
+
+            $location.path('/edit/index');
+        }
+        self.select = function(ques)                                             // Edition------------------------------
+        {
+            self.editedQuestion = ques.id;
+
+        };
+        self.new = function()
+        {
+            self.newQues = new QuesFactory();
+            if(self.newQues) {
+                self.newQues = new QuesFactory();
+                self.newQues.Titre = self.createQuestionInput.Titre;
+                self.newQues.reponses = [];
+                self.newQues.$save({qcmId: self.actualQcm.id});
+            }
+            delete(self.editedQuestion);
+            $route.reload();
+        }
+        self.cancel = function(id)
+        {
+            if(self.questionEdit)
+            self.questionEdit[id]="";
+            delete(self.editedQuestion);
+        }
+        self.delete = function(id)
+        {
+            if(self.actualQuestion && self.actualQuestion.id==id)
+            {
+                delete(self.actualQuestion);
+            }
+            QuesFactory.delete({qcmId:self.actualQcm.id,questionId:id});
+            delete(self.editedQuestion);
+            $route.reload();
+
+        }
+        self.save = function(id)
+        {
+                QuesFactory.get({qcmId: self.actualQcm.id, questionId: id})
+                    .$promise.then(function (ques) {
+                        if(self.questionEdit && self.questionEdit[id]) {
+                            ques.Titre = self.questionEdit[id].Titre;
+                            ques.$save({qcmId: self.actualQcm.id , questionId: id});
+                            self.questionEdit[id].Titre = "";
+                        }
+                        delete(self.editedQuestion);
+                        $route.reload();
+                    }
+                );
+
+
+        }
+        self.goToQuestion = function(id)
+        {
+         $location.path('/edit/qcm/'+$routeParams.qcmId+"/question/"+id);
+
+        }
+
+    }])
+    .controller('answersEditController',['$scope','$http','QuesFactory','$routeParams','sharedData','$location','$route',  function($scope, $http,QuesFactory,$routeParams,sharedData, $location,$route, loadedQues)
+    {
+        var self=this;
+        self.actualQcm = sharedData.get('actualQcm');
+        self.actualQuestion = sharedData.get('actualQuestion');
+        self.back = function()
+        {
+            $location.path("/edit/qcm/"+$routeParams.qcmId);
+
+
+        }
+        self.cancel = function(){
+            $route.reload();
+        }
+        self.new = function()
+        {
+            if(self.createAnswerEdit)
+            self.actualQuestion.reponses[self.actualQuestion.reponses.length]=
+            {  id:self.actualQuestion.reponses.length,
+                Titre:self.createAnswerEdit,
+                isTrue:false
+            }
+        }
+        self.save = function(){
+                var saveLength = self.actualQuestion.reponses.length;
+                var recul = 0;
+                for (var i = 0; i < saveLength; i++) {
+                    if ( self.repDel && self.repDel[i] == true) {
+                        self.actualQuestion.reponses.splice(i - recul, 1);
+                        recul++;
+                        delete(self.repDel[i]);
+                    }
+                    else
+                    {
+                        if(self.repEdit && self.repEdit[i])
+                        self.actualQuestion.reponses[i-recul].Titre=self.repEdit[i].Titre;
+
+                    }
+                }
+                for (var j = 0; j < self.actualQuestion.reponses.length; j++) {
+                    self.actualQuestion.reponses[j].id = j;
+                }
+
+                QuesFactory.get({qcmId: $routeParams.qcmId, questionId: $routeParams.questionId})
+                    .$promise.then(function (ques) {
+                            ques.reponses = self.actualQuestion.reponses;
+                            ques.$save({qcmId: $routeParams.qcmId, questionId: $routeParams.questionId});
+                            $route.reload();
+
+                    });
+
+        }
+        self.uncheckOther = function(reponse)                                   // Edition------------------------------
+        {
+
+            for(var i = 0;i<self.actualQuestion.reponses.length;i++)
+            {
+                if(self.actualQuestion.reponses[i].id!=reponse.id)
+                {
+
+                    self.actualQuestion.reponses[i].isTrue=false;
+                }
+
+            }
+
+
+        };
+    }
+    ])
+;

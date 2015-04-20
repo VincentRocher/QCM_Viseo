@@ -1,0 +1,14 @@
+<div ng-controller = "loginController as logCtrl">
+		<form ng-submit="logCtrl.checkLogs()" name="editionLog">
+			<input type="text" name="loginSecu" ng-model="logCtrl.user.login" ng-minlength="2" ng-maxlength="10" required/>
+			<span ng-show="editionLog.loginSecu.$error.minlength"> more than 2 char</span>
+			<span ng-show="editionLog.loginSecu.$error.maxlength"> less than 10 char</span>
+			<span ng-show="editionLog.loginSecu.$error.required"> required</span>
+            <br/>
+			<input type="password" name="PwdSecu" ng-model="logCtrl.user.pwd" required/>
+			<span ng-show="editionLog.PwdSecu.$error.required"> required</span>
+            <br/>
+			<input type="submit" value="confirmer">
+		</form>
+		<a href="#/index"><button >Annuler</button></a>
+</div>

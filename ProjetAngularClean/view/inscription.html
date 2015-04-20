@@ -1,16 +1,15 @@
-<div ng-controller="inscriptionControleur as InsCtrl">
+<div ng-controller="inscriptionController as InsCtrl">
 
-    <div class="globalForm" >
+    <div>
 
-            <form method="POST" ng-submit="InsCtrl.inscription()" name="Inscription" >
-                {{InsCtrl.utilisateurIns}}
-                <span >nom :</span><input type="text" name="Name" ng-model="InsCtrl.utilisateurIns.Name"  ><br>
-                <span >prenom :</span><input type="text" name="Surname" ng-model="InsCtrl.utilisateurIns.Surname" /><br>
-                <span >Date de naissance :</span><input type="Date"  name="Birth" ng-model="InsCtrl.utilisateurIns.Birth"  /><br>
-                <span >Genre :</span><input type="text" name="Gender" ng-model="InsCtrl.utilisateurIns.Gender"  /><br>
-                <span > Code Postal :</span><input type="text" name="Postal" ng-model="InsCtrl.utilisateurIns.Postal" /><br>
-                <span >Ville :</span><input type="text" name="Town" ng-model="InsCtrl.utilisateurIns.Town"  /><br>
-                <span >Nationalite :</span><select ng-model="Nat" ng-model="InsCtrl.utilisateurIns.Nat"><option value="Nat1" >Nat1</option><option value="Nat2">Nat2</option><option value="Nat3">Nat3</option></select><br>
+            <form method="POST" ng-submit="InsCtrl.inscription()" name="Inscription"  class="inscriptionLogs">
+                <span >nom :</span><input type="text" name="Name" ng-model="InsCtrl.utilisateurIns.Name" required /><br>
+                <span >prenom :</span><input type="text" name="Surname" ng-model="InsCtrl.utilisateurIns.Surname"  required /><br>
+                <span >Date de naissance :</span><input type="Date"  name="Birth" ng-model="InsCtrl.utilisateurIns.Birth" required  /><br>
+                <span >Genre :</span><input type="text" name="Gender" ng-model="InsCtrl.utilisateurIns.Gender" required  /><br>
+                <span > Code Postal :</span><input type="text" name="Postal" ng-model="InsCtrl.utilisateurIns.Postal" required /><br>
+                <span >Ville :</span><input type="text" name="Town" ng-model="InsCtrl.utilisateurIns.Town" required  /><br>
+                <span >Nationalite :</span><select ng-model="Nat" ng-model="InsCtrl.utilisateurIns.Nat"><option value="Nat1" required >Nat1</option><option value="Nat2">Nat2</option><option value="Nat3">Nat3</option></select><br>
                 <input type="submit" value="Valider"/>
             </form>
             <a href="#/index"><button   ng-click="InsCtrl.cancel('inscription')">Annuler</button></a>

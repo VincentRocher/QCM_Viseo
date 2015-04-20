@@ -1,0 +1,17 @@
+
+
+<div ng-controller='questionsEditController as questionEditCtrl'>
+    <span ng-show="questionEditCtrl.actualQcm" >QCM actif:{{questionEditCtrl.actualQcm.Titre}}</span>
+    <button ng-click="questionEditCtrl.back()" class="edit">Retour</button>
+    <div ng-repeat="question in questionEditCtrl.actualQcm.questions">
+
+        <input type="text" name ="{{'ques'+questionEditCtrl.question_Courante.id}}" ng-model="questionEditCtrl.questionEdit[question.id].Titre"  ng-click="questionEditCtrl.select(question)" value="{{question.Titre}}" placeholder="{{question.Titre}}"/>
+        <button ng-disabled="questionEditCtrl.editedQuestion != question.id" ng-click="questionEditCtrl.save(question.id)" class="edit">Sauvegarder</button>
+        <button ng-disabled="questionEditCtrl.editedQuestion != question.id" ng-click="questionEditCtrl.cancel(question.id)" class="edit">Annuler</button>
+        <button ng-disabled="questionEditCtrl.editedQuestion != question.id || questionEditCtrl.questionEdit[question.id].Titre.length >0" ng-click="questionEditCtrl.goToQuestion(question.id)" class="edit">editer</button>
+        <button ng-disabled="questionEditCtrl.editedQuestion != question.id || questionEditCtrl.questionEdit[question.id].Titre.length >0" ng-click="questionEditCtrl.delete(question.id)" class="delete">supprimer</button>
+    </div>
+    <input ng-click="questionEditCtrl.selectN()"  type="text" ng-model="questionEditCtrl.createQuestionInput.Titre" name="createQuestionInput"value="Creer question"/>
+    <button ng-disabled="questionEditCtrl.editedQuestion >=0"  ng-click="questionEditCtrl.new('question')" class="create">Creer Question</button>
+
+</div>

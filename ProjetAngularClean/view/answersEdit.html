@@ -1,0 +1,27 @@
+<div ng-controller="answersEditController as answerEditCtrl">
+    <span ng-show="answerEditCtrl.actualQuestion" >Question active:{{answerEditCtrl.actualQuestion.Titre}}</span>
+    <br/>
+    <button  ng-click="answerEditCtrl.back()" class="edit">Retour</button>
+    <button ng-click="answerEditCtrl.save(self.actualQuestion.id,'question')" class="edit">Sauvegarder</button>
+    <button  ng-click="answerEditCtrl.cancel()" class="edit">Annuler</button>
+
+    <div ng-repeat="reponse in answerEditCtrl.actualQuestion.reponses" >
+        <input type="radio"
+               ng-disabled=""
+               ng-value="true"
+               ng-change="answerEditCtrl.uncheckOther(reponse)"
+               ng-model="answerEditCtrl.actualQuestion.reponses[reponse.id].isTrue"
+               name="{{'qcm'+answerEditCtrl.actualQcm.id+'ques'+answerEditCtrl.actualQuestion.id}}"
+               value="true"
+                />
+        {{reponse.id}}
+        <input type="text" name ="{{'rep'+answerEditCtrl.actualAnswer.id}}" ng-model="answerEditCtrl.repEdit[reponse.id].Titre" value="{{reponse.Titre}}" placeholder="{{reponse.Titre}}"/>
+        <span>Supprimer:</span>
+        {{reponse.id}}
+        <input type="checkbox" value="false" ng-model="answerEditCtrl.repDel[reponse.id]" />
+    </div>
+
+    <input type="text" ng-model="answerEditCtrl.createAnswerEdit" name="createAnswerEdit"value="Creer reponse"/>
+    <button ng-click="answerEditCtrl.new('reponse')" class="create">Creer Reponse</button>
+
+</div>
